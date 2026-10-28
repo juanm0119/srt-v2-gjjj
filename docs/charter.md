@@ -332,5 +332,38 @@ Las historias identificadas como operación requieren, además, estimación medi
 | HU-16 | Evaluar los cambios de prompt antes de publicarlos. | 07 | Media | Sí | Pendiente |
 | HU-17 | Comunicar los incidentes y elaborar un post-mortem sin culpables. | 05, S8 | Alta | Sí | Pendiente |
 
+### 7.2. Capacidad disponible hasta la S8
+
+La S8, correspondiente al cierre y defensa, está programada para el
+7 de noviembre de 2026. Para esta planificación se consideran dos semanas
+de trabajo: del 24 de octubre al 6 de noviembre de 2026.
+
+Las horas-persona representan el esfuerzo acumulado de los integrantes,
+aunque trabajen simultáneamente.
+
+| Integrante | Horas por semana | Semanas | Horas brutas | Horas con enfoque de 0,70 |
+|---|---|---|---|---|
+| Jorge Andrés Sánchez Martínez | 15 | 2 | 30 | 21 |
+| Juan Manuel Adarve Cifuentes | 12 | 2 | 24 | 16,8 |
+| Jorge Eliecer Leighton Romero | 20 | 2 | 40 | 28 |
+| Gloria Abimeleth Ardila Guerrero | 15 | 2 | 30 | 21 |
+| **Total** | **62** | **2** | **124** | **86,8** |
+
+#### Supuestos de planificación
+
+Se propone un factor de enfoque de 0,70 para contemplar interrupciones
+y coordinación. Adicionalmente, se reserva el 10 % de la capacidad
+enfocada para reprocesos de datos. Ambos valores deberán validarse
+con el equipo.
+
+#### Cálculo de capacidad
+
+- Capacidad bruta: 62 × 2 = 124 horas-persona.
+- Capacidad con enfoque: 124 × 0,70 = 86,80 horas-persona.
+- Reserva para reprocesos: 86,80 × 0,10 = 8,68 horas-persona.
+- Capacidad neta provisional: 86,80 − 8,68 = 78,12 horas-persona.
+
+La comparación con el backlog se completará al estimar las historias
+y el spike, distinguiendo el trabajo ya realizado del esfuerzo pendiente.
 ## 8. Riesgos principales
 Los cinco riesgos de mayor exposición. El registro completo y vivo está en [`riesgos.md`](riesgos.md).
