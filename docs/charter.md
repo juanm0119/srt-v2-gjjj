@@ -307,5 +307,63 @@ Si una persona representa más de un rol, se registra con qué autoridad actúa 
 
 ## 7. Backlog estimado, Definición de Terminado y cronograma
 
+### 7.1 Backlog estimado, capacidad y compromiso
+
+El backlog de referencia contiene las 17 historias de usuario HU-01 a HU-17, registradas y estimadas en el tablero Trello del equipo. Se aplicaron las equivalencias S = 3 h, M = 6 h, L = 10 h y XL = 16 h. Las siete historias de operación (HU-07, HU-08, HU-09, HU-10, HU-11, HU-16 y HU-17) tienen además estimación PERT.
+
+| Concepto | Cálculo | Horas |
+|---|---:|---:|
+| Esfuerzo estimado del backlog completo | Suma de HU-01 a HU-17 | 145,00 |
+| Disponibilidad semanal declarada | 15 + 12 + 20 + 15 | 62,00 |
+| Factor de enfoque | 62 × 0,60 | 37,20 h/semana |
+| Periodo disponible hasta S8 | 2 semanas | — |
+| Capacidad efectiva total | 37,20 × 2 | 74,40 |
+| Reserva propuesta para reprocesos de datos | 74,40 × 0,10 | 7,44 |
+| Capacidad comprometible | 74,40 − 7,44 | 66,96 |
+| Déficit frente al backlog completo | 145,00 − 66,96 | 78,04 |
+
+El factor de enfoque de 0,60 se eligió dentro del rango establecido para el Reto 01. La reserva propuesta del 10 % cubre reprocesos de datos, validaciones fallidas y ajustes derivados del contrato de datos; el factor de enfoque ya contempla interrupciones y coordinación general.
+
+El backlog completo no cabe en la capacidad comprometible declarada. Las 17 historias permanecen en el tablero como backlog de referencia y no se eliminan. En la reunión del equipo se definirá el compromiso real: historias que se aplazan, historias que se dividen o capacidad adicional que el equipo pueda declarar. La decisión se registrará en `docs/decision_log.md` y el déficit se gestionará como riesgo de gestión en `docs/riesgos.md`.
+
+Según las estimaciones que asignamos a las 17 historias:
+Categoría	Historias	Total de horas
+Historias operativas	HU-07, HU-08, HU-09, HU-10, HU-11, HU-16, HU-17	72 h
+Resto de historias	HU-01 a HU-06 y HU-12 a HU-15	73 h
+Total general	17 historias	145 h
+
+### 7.2 Marco de gestión
+
+El equipo adopta Kanban como marco de gestión, usando Trello para visualizar el backlog, el trabajo en curso, las revisiones y las historias terminadas. Esta elección se ajusta a un equipo de cuatro integrantes que trabaja a tiempo parcial, con fechas de tag fijas y tareas de distinta naturaleza entre los Retos 02 y 07.
+
+Cada semana se realizará una reunión corta para priorizar el trabajo, revisar la capacidad disponible, identificar bloqueos y acordar responsables. Entre reuniones, cada integrante actualizará el estado de sus tarjetas en Trello y comunicará bloqueos al Líder / PO. Al cierre de cada reto, el equipo revisará evidencias, decisiones, riesgos y los archivos requeridos antes de publicar el tag correspondiente.
+
+### 7.3 Definición de Terminado
+
+Una historia se considera terminada cuando cumple sus criterios de aceptación y los siguientes criterios generales:
+
+| Criterio | Aplica desde | Evidencia |
+|---|---|---|
+| El cambio entra a `main` mediante un pull request revisado por otro integrante. | Reto 02 | Pull request aprobado y mergeado. |
+| `dvc repro` reproduce el resultado y `dvc.lock` está actualizado. | Reto 03 | Salida de la ejecución y archivo `dvc.lock` versionado. |
+| La integración continua está en verde. | Reto 04 | Ejecución exitosa de la CI en GitHub. |
+| Si la historia implica una decisión, existe una entrada en `docs/decision_log.md`. | Reto 00 | Registro con fecha, alternativas, justificación, responsable y evidencia. |
+| El registro de riesgos incorpora el aprendizaje o cambio de exposición identificado. | Reto 01 | Actualización de `docs/riesgos.md`. |
+
+Estos criterios se aplican además de los criterios particulares de aceptación de cada historia. Ninguna historia se marca como terminada solo por tener código escrito: debe conservar evidencia reproducible, revisada y documentada.
+
+### 7.4 Cronograma por fin de semana
+
+| FDS | Reto o entrega | Responsable (R) | Tag | Fecha límite |
+|---|---|---|---|---|
+| 2 | Reto 02 - Gobierno y contrato de datos | Gloria Abimeleth Ardila Guerrero, Data Steward | `r02` | Siete días después del FDS 2 |
+| 2 | Reto 03 - Reproducibilidad y versionado | Jorge Eliecer Leighton Romero, MLOps Engineer | `r03` | Siete días después del FDS 2 |
+| 3 | Reto 04 - Pruebas e integración continua | Jorge Eliecer Leighton Romero, MLOps Engineer | `r04` | Siete días después del FDS 3 |
+| 3 | Reto 05 - Despliegue, monitoreo y operación | Jorge Eliecer Leighton Romero, MLOps Engineer | `r05` | Siete días después del FDS 3 |
+| 4 | Reto 06 - Impacto, equidad y gobernanza | Jorge Andrés Sánchez Martínez, Data Scientist | `r06` | Inicio de la S8 |
+| 4 | Reto 07 - Asistente de explicación con LLM | Jorge Andrés Sánchez Martínez, Data Scientist | `r07` | Inicio de la S8 |
+| 4 | Proyecto Final - Simulacro y defensa | Juan Manuel Adarve Cifuentes, Líder / PO | `final` | S8, antes de la primera defensa |
+
+Cada responsable coordina la evidencia y el cierre del reto, pero el trabajo se distribuye entre los cuatro integrantes según la RACI, los roles secundarios y la capacidad disponible.
 ## 8. Riesgos principales
 Los cinco riesgos de mayor exposición. El registro completo y vivo está en [`riesgos.md`](riesgos.md).
