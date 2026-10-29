@@ -32,12 +32,13 @@ Estos valores corresponden a las condiciones oficiales de V2. Su configuración 
 
 | Integrante | Rol principal | Rol secundario |
 |---|---|---|
-| Juan Manuel Adarve Cifuentes | Líder de proyecto / Product Owner | Pendiente de acuerdo del equipo |
-| Jorge Eliecer Leighton Romero | MLOps Engineer | Pendiente de acuerdo del equipo |
-| Jorge Andrés Sanchez | Data Scientist | Pendiente de acuerdo del equipo |
-| Gloria Abimeleth Ardila Guerrero | Data Steward | Pendiente de acuerdo del equipo |
+| Juan Manuel Adarve Cifuentes | Líder de proyecto / Product Owner | MLOps Engineer |
+| Jorge Eliecer Leighton Romero | MLOps Engineer | Data Steward |
+| Jorge Andrés Sánchez Martínez | Data Scientist | Líder de proyecto / Product Owner |
+| Gloria Abimeleth Ardila Guerrero | Data Steward | Data Scientist |
 
-Las funciones de Data Scientist y Data Steward se distribuyen entre dos integrantes. Los roles secundarios se completarán cuando el equipo acuerde las responsabilidades de apoyo.
+Las funciones de Data Scientist y Data Steward se distribuyen entre dos integrantes. Los roles secundarios se acordaron en el Reto 01; la RACI y las reglas de suplencia están en la §6.
+
 
 ## 2. Problema de negocio y línea base
 
@@ -183,6 +184,7 @@ Las líneas base calculadas con datos sintéticos son provisionales y se actuali
 | Técnico: equidad | Brecha de recall entre grupos de `senior_citizen` | 0.1444, equivalente a 14.44 puntos porcentuales, con umbral de decisión 0.35. Fuente: `metrics.json`, commit `14bf349`. | ≤ 0.10, límite inicial de V2 según el contrato §11, sujeto a ratificación del comité en el Reto 06. | Consultar `recall_gap_senior_citizen` después de cada evaluación y analizar la brecha al estudiar los umbrales de decisión en el Reto 06. |
 | Negocio estimado | Beneficio neto adicional frente a contactar al azar: `net_savings_vs_random` | 16385.79 miles de COP por lote de referencia. Fuente: `metrics.json`, commit `14bf349`, con los supuestos de V2 y umbral 0.35. | > 0 miles de COP por lote, respetando la capacidad y la política de equidad aplicable. | Comparar `net_savings_model` y `net_savings_random` para el mismo número de contactos. Consultar su diferencia en `metrics.json` y actualizar el análisis en `reports/business/` en el Reto 06. |
 | Operación | Latencia p95 del servicio `/predict` | Referencia de diseño: 300 ms, según el Reto 00 §2.2. La línea base medida en el entorno del equipo está pendiente del Reto 05. | p95 < 300 ms. | Realizar pruebas de carga en el Reto 05 y monitorear el servicio. Registrar p95, número de solicitudes y condiciones de la prueba para comparar resultados. |
+| Operación | Tiempo de rollback: desde la decisión de revertir hasta que `/health` informa la versión de `@previous` | Sin procedimiento. Aún no existe un procedimiento de rollback; se construye en los Retos 03 y 05 (HU-11). | < 30 min (HU-11). | Cronometrar el ensayo de rollback del Reto 05: registrar la hora de la decisión del Líder / PO y la hora en que `/health` muestra la versión de `@previous`, y anotar el tiempo en `docs/decision_log.md`. |
 | Gestión | Número de hitos de entrega publicados dentro del plazo | 0 de 9 hitos publicados. Fuente: consulta `git ls-remote --tags --refs origin` sin resultados, realizada el 2026-10-21. | 9 de 9 entregas dentro de sus plazos: `r00` a `r07` y `final`. | Verificar los tags en el repositorio remoto, registrar la fecha y evidencia de publicación en la bitácora de cada entrega y contrastarlas con el calendario del contrato §6.2. |
 
 ### Interpretación y seguimiento
@@ -311,6 +313,35 @@ Si una persona representa más de un rol, se registra con qué autoridad actúa 
 
 El backlog de referencia contiene las 17 historias de usuario HU-01 a HU-17, registradas y estimadas en el tablero Trello del equipo. Se aplicaron las equivalencias S = 3 h, M = 6 h, L = 10 h y XL = 16 h. Las siete historias de operación (HU-07, HU-08, HU-09, HU-10, HU-11, HU-16 y HU-17) tienen además estimación PERT.
 
+Tablero del backlog: [Trello — Retos - Gerencia de proyectos en analítica de datos](https://trello.com/b/szznOU9w/retos-gerencia-de-proyectos-en-analitica-de-datos)
+
+| Id | Historia | Talla / horas | Reto | Responsable |
+|---|---|---|---|---|
+| HU-01 | Definir el valor del SRT | S · 3 h | 00 | Gloria Ardila (Data Steward) |
+| HU-02 | Definir responsables y reglas de gobierno | M · 6 h | 01 | Gloria Ardila (Data Steward) |
+| HU-03 | Detener el pipeline ante datos inválidos | L · 10 h | 02, 03 | Gloria Ardila (Data Steward) |
+| HU-04 | Excluir la fuga de información antes de entrenar | M · 6 h | 02 | Gloria Ardila (Data Steward) |
+| HU-05 | Reconstruir el modelo desde cualquier tag | L · 10 h | 03 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-06 | Comparar tres corridas del modelo | M · 6 h | 03 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-07 ⚙️ | Bloquear cambios que no superen pruebas y quality gate | L · 10 h (PERT Te = 10,33) | 04 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-08 ⚙️ | Generar la lista semanal de clientes en riesgo | L · 10 h (PERT Te = 10,33) | 04 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-09 ⚙️ | Consultar el riesgo de un cliente en menos de un segundo | M · 6 h (PERT Te = 6,17) | 05 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-10 ⚙️ | Generar un reporte de drift por cada lote | L · 10 h (PERT Te = 10,33) | 05 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-11 ⚙️ | Recuperar la versión anterior en menos de 30 minutos | XL · 16 h (PERT Te = 16,33) | 03, 05 | Jorge Eliecer Leighton (MLOps Engineer) |
+| HU-12 | Estimar el ahorro frente a llamar al azar | L · 10 h | 06 | Jorge Andrés Sánchez (Data Scientist) |
+| HU-13 | Medir la brecha de recall entre grupos | L · 10 h | 06 | Jorge Andrés Sánchez (Data Scientist) |
+| HU-14 | Documentar el modelo y sus usos no previstos | M · 6 h | 06 | Jorge Andrés Sánchez (Data Scientist) |
+| HU-15 | Explicar por qué un cliente está en riesgo | M · 6 h | 07 | Jorge Andrés Sánchez (Data Scientist) |
+| HU-16 ⚙️ | Evaluar los cambios del prompt antes de publicarlos | L · 10 h (PERT Te = 10,33) | 07 | Jorge Andrés Sánchez (Data Scientist) |
+| HU-17 ⚙️ | Comunicar los incidentes y documentar el post-mortem | L · 10 h (PERT Te = 10,33) | 05, S8 | Jorge Eliecer Leighton (MLOps Engineer) |
+| Spike | ¿Ollama con qwen3:4b responde en menos de 20 s? | 3 h (tiempo máximo) | 01 (informa al 07) | Jorge Eliecer Leighton (MLOps Engineer) |
+| | **Total HU-01 a HU-17** | **145 h** | | |
+| | **Total con el spike** | **148 h** | | |
+
+⚙️ Historia de operación (etiqueta OPERACIÓN en el tablero), estimada además con PERT: Te = (O + 4M + P) / 6. Los valores O, M y P de cada una están en su tarjeta.
+
+El responsable de cada historia corresponde al R del reto donde se implementa según el cronograma (§7.4); HU-01 y HU-02 siguen la R de "Project Charter y ML Canvas" en la RACI (§6). El spike lo ejecuta el MLOps Engineer; el Data Scientist conserva la decisión sobre `llm.*` y `llm_gate.*` (contrato §7.1) con base en su resultado.
+
 | Concepto | Cálculo | Horas |
 |---|---:|---:|
 | Esfuerzo estimado del backlog completo | Suma de HU-01 a HU-17 | 145,00 |
@@ -324,19 +355,28 @@ El backlog de referencia contiene las 17 historias de usuario HU-01 a HU-17, reg
 
 El factor de enfoque de 0,60 se eligió dentro del rango establecido para el Reto 01. La reserva propuesta del 10 % cubre reprocesos de datos, validaciones fallidas y ajustes derivados del contrato de datos; el factor de enfoque ya contempla interrupciones y coordinación general.
 
-El backlog completo no cabe en la capacidad comprometible declarada. Las 17 historias permanecen en el tablero como backlog de referencia y no se eliminan. En la reunión del equipo se definirá el compromiso real: historias que se aplazan, historias que se dividen o capacidad adicional que el equipo pueda declarar. La decisión se registrará en `docs/decision_log.md` y el déficit se gestionará como riesgo de gestión en `docs/riesgos.md`.
+El backlog completo no cabe en la capacidad comprometible declarada. Las 17 historias permanecen en el tablero como backlog de referencia y no se eliminan. En la reunión del equipo se definió que no se dispone de horas adicionales para cubrir el déficit de 78,04 h, por lo que el déficit se acepta y se reporta como riesgo de gestión (R-07 en `docs/riesgos.md`). Con el spike (3 h) el backlog suma 148 h; al descontar HU-01 (3 h), entregada en el Reto 00 antes del periodo de capacidad, quedan 145 h pendientes, de modo que el déficit se mantiene en 78,04 h. Para que el déficit no recaiga al azar sobre cualquier historia, se trabajan primero las historias de prioridad Alta (*Historias y casos de uso*, §3). Las de prioridad Media (HU-06, HU-09, HU-14, HU-15 y HU-16, 34 h) se hacen en versión mínima o se aplazan si al cierre de cada reto no queda capacidad. El Líder / PO revisa el avance en la reunión semanal y registra en `docs/decision_log.md` qué se recortó en cada reto. La decisión está registrada en `docs/decision_log.md` (2026-10-29).
 
 Según las estimaciones que asignamos a las 17 historias:
-Categoría	Historias	Total de horas
-Historias operativas	HU-07, HU-08, HU-09, HU-10, HU-11, HU-16, HU-17	72 h
-Resto de historias	HU-01 a HU-06 y HU-12 a HU-15	73 h
-Total general	17 historias	145 h
+
+| Categoría | Historias | Total de horas |
+|---|---|---:|
+| Historias operativas | HU-07, HU-08, HU-09, HU-10, HU-11, HU-16, HU-17 | 72 h |
+| Resto de historias | HU-01 a HU-06 y HU-12 a HU-15 | 73 h |
+| Total general | 17 historias | 145 h |
 
 ### 7.2 Marco de gestión
 
-El equipo adopta Kanban como marco de gestión, usando Trello para visualizar el backlog, el trabajo en curso, las revisiones y las historias terminadas. Esta elección se ajusta a un equipo de cuatro integrantes que trabaja a tiempo parcial, con fechas de tag fijas y tareas de distinta naturaleza entre los Retos 02 y 07.
+El equipo adopta **Kanban**, combinado con **CRISP-ML(Q)**: CRISP-ML(Q) indica en qué fase del proyecto está cada historia (etiqueta de fase en el tablero) y Kanban organiza el trabajo de la semana. No se elige entre los dos: se combinan. El backlog y el estado de cada historia se visualizan en Trello.
 
-Cada semana se realizará una reunión corta para priorizar el trabajo, revisar la capacidad disponible, identificar bloqueos y acordar responsables. Entre reuniones, cada integrante actualizará el estado de sus tarjetas en Trello y comunicará bloqueos al Líder / PO. Al cierre de cada reto, el equipo revisará evidencias, decisiones, riesgos y los archivos requeridos antes de publicar el tag correspondiente.
+| Aspecto | Cómo lo aplica el equipo |
+|---|---|
+| Iteración | Un reto: empieza con el fin de semana de clase y termina con la publicación de su tag (`r02` a `r07`), siete días después o al inicio de la S8 (contrato §6.2). |
+| Eventos que se conservan | Una reunión semanal corta para priorizar, revisar la capacidad disponible, identificar bloqueos y acordar responsables; y una revisión de cierre antes de cada tag (evidencias, decisiones, riesgos y archivos requeridos). |
+| Eventos que se descartan | La daily, porque cuatro integrantes a tiempo parcial, con 62 h semanales en total, no coinciden a diario; y la planeación de sprint y la retrospectiva formales de Scrum, porque las fechas de tag ya fijan el ritmo y la reunión semanal cubre la priorización y los ajustes. |
+| Coordinación entre fines de semana | Cada integrante actualiza el estado de sus tarjetas en Trello y comunica los bloqueos al Líder / PO. |
+
+**Por qué Kanban:** el equipo se ve cuatro fines de semana, trabaja a tiempo parcial, tiene fechas de tag fijas y un déficit de capacidad aceptado (§7.1). Kanban permite priorizar semana a semana dentro de cada reto sin sumar ceremonias que consuman las pocas horas disponibles.
 
 ### 7.3 Definición de Terminado
 
@@ -365,5 +405,23 @@ Estos criterios se aplican además de los criterios particulares de aceptación 
 | 4 | Proyecto Final - Simulacro y defensa | Juan Manuel Adarve Cifuentes, Líder / PO | `final` | S8, antes de la primera defensa |
 
 Cada responsable coordina la evidencia y el cierre del reto, pero el trabajo se distribuye entre los cuatro integrantes según la RACI, los roles secundarios y la capacidad disponible.
+### 7.5 Historia peor estimada
+
+**HU-11 — Recuperar la versión anterior en menos de 30 minutos** (XL · 16 h; PERT O = 10, M = 16, P = 24, Te = 16,33) es la historia que más probablemente se desborde:
+
+- Tiene la mayor incertidumbre del backlog: su rango PERT (P − O = 14 h) es el más amplio, y es la única historia XL.
+- Es una historia de operación ⚙️; *Historias y casos de uso* §3 advierte que estas son las que más se subestiman.
+- Se reparte entre dos retos (03 y 05): lo que se construye en el Reto 03 no puede probarse completo hasta que exista el despliegue del Reto 05.
+- Depende de piezas que todavía no existen: el alias `@previous`, el redespliegue, `/health` y el procedimiento del runbook.
+
+**Acción: dividirla**, siguiendo la separación que ya hace el caso de uso CU-05 (*"03 (registro) · 05 (redespliegue cronometrado)"*):
+
+| Parte | Reto | Alcance |
+|---|---|---|
+| HU-11a | 03 | Promoción con `@previous` registrado, de modo que exista una versión a la cual volver. |
+| HU-11b | 05 | Redespliegue cronometrado hasta que `/health` informe la versión de `@previous` en menos de 30 minutos (KPI de rollback, §4). |
+
+Si al cierre del Reto 03 HU-11a ya consumió más de la mitad de las 16 h estimadas, se escala en la reunión semanal según el riesgo R-07. La decisión está registrada en `docs/decision_log.md` (2026-10-29).
+
 ## 8. Riesgos principales
 Los cinco riesgos de mayor exposición. El registro completo y vivo está en [`riesgos.md`](riesgos.md).
