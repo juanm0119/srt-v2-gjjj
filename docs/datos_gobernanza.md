@@ -47,16 +47,23 @@ Esta ficha es la documentación oficial del extracto. Se entrega junto con el ar
 
 ## 2. Diagnóstico de calidad
 
-| Dimensión | Regla por verificar | Resultado | Acción pendiente |
-|---|---|---|---|
-| Completitud | Ninguna columna admite valores vacíos, según la ficha técnica. | Pendiente: cantidad y porcentaje de filas afectadas por columna. | Recibir el perfil de calidad y consultar el tratamiento de los faltantes con el dueño del dato. |
-| Validez | Los tipos, dominios y rangos deben corresponder a la ficha técnica. | Pendiente: cantidad y porcentaje de filas afectadas por regla. | Identificar los valores concretos fuera del dominio y registrar el tratamiento autorizado. |
-| Consistencia | Si internet_service es none, monthly_charges debe ser menor o igual a 60. | Pendiente: cantidad y porcentaje de filas que incumplen RC-3. | Consultar al dueño del dato cómo tratar las inconsistencias encontradas. |
-| Unicidad | customer_id debe ser único en el archivo. | Pendiente: cantidad de códigos repetidos y filas involucradas, con su porcentaje. | Consultar el criterio para resolver duplicados y documentar la decisión. |
+El diagnóstico inicial corresponde al extracto crudo, antes de aplicar los tratamientos de limpieza.
 
-El diagnóstico está pendiente de recibir y revisar los resultados
-agregados del perfil de calidad de la variante V2. Los tratamientos
-se incorporarán después de registrar las respuestas del dueño del dato.
+- **Tamaño del extracto:** 7042 filas y 13 columnas.
+- **Fuente de los resultados:** perfil de calidad compartido por Jorge Andrés Sánchez.
+- **Porcentajes:** calculados sobre las 7042 filas del extracto y presentados con un decimal, según el reporte recibido.
+
+| Dimensión | Regla evaluada | Resultado | Acción pendiente |
+| --- | --- | --- | --- |
+| Completitud | Ninguna columna admite valores vacíos, según la ficha técnica. | `monthly_charges`: 57 filas con nulos (0,8 %). `fecha_alta`: 28 filas con nulos (0,4 %). Las otras 11 columnas presentan cero nulos. | Consultar con el dueño del dato el tratamiento autorizado para los faltantes de cada columna. |
+| Validez | Los valores deben respetar los dominios y rangos establecidos en la ficha técnica. | `contract_type`: 192 filas con `Month-to-month` (2,7 %). `payment_method`: 82 filas con `tarjeta_debito` (1,2 %). `tenure_months`: 28 filas con −1 (0,4 %). `support_tickets`: 13 filas con 99 (0,2 %). | Confirmar el significado de los valores encontrados y registrar la normalización, corrección o exclusión autorizada para cada caso. |
+| Unicidad | Cada cliente debe estar representado por una sola fila y `customer_id` debe ser único. | Se reportan 84 filas con `customer_id` repetido (1,2 %) y 22 copias exactas de otra fila. | Acordar el criterio para resolver las repeticiones y determinar qué registro conservar. |
+| Consistencia | RC-3: cuando `internet_service` es `none`, `monthly_charges` debe ser menor o igual a 60. | Se identifican 17 filas que incumplen la regla (0,2 %). | Consultar con el dueño del dato cómo resolver estos casos y registrar el tratamiento autorizado. |
+| Actualidad | Revisar la coherencia entre `fecha_alta`, `fecha_corte` y el corte esperado del extracto: 2026-09-30. | Pendiente: la salida compartida no incluye los resultados de estas verificaciones temporales. | Solicitar a Jorge Andrés los resultados de las comprobaciones temporales para completar esta dimensión. |
+
+**Interpretación de los conteos:** una misma fila puede presentar varios defectos y aparecer en distintos indicadores. Por ello, los conteos y porcentajes no deben sumarse para obtener el total de filas afectadas. Los indicadores de identificadores repetidos y copias exactas también deben conservarse por separado.
+
+**Estado de los tratamientos:** pendiente de confirmar los acuerdos con el dueño del dato y registrar sus respuestas. Los resultados anteriores describen los problemas detectados en el extracto crudo; la cantidad de filas descartadas se determinará después de aplicar los tratamientos acordados.
 
 ## 3. Hallazgos del EDA
 
