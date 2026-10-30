@@ -67,6 +67,31 @@ El diagnóstico inicial corresponde al extracto crudo, antes de aplicar los trat
 
 ## 3. Hallazgos del EDA
 
+### 3.1. Hallazgos iniciales del extracto
+
+El extracto contiene 7042 filas y 13 columnas. El esquema canónico utilizado por el modelo contempla nueve columnas: el identificador del cliente, siete variables predictoras y la variable objetivo.
+
+Las cuatro columnas adicionales son `region`, `fecha_alta`, `fecha_corte` y `oferta_retencion_aceptada`. Sus motivos de exclusión de la salida limpia se documentan en `COLUMNAS_EXCLUIDAS`, dentro de `src/clean.py`.
+
+El perfil inicial identifica faltantes, valores fuera de los dominios o rangos, identificadores repetidos e incumplimientos de RC-3. Los conteos detallados se presentan en la sección 2. Estos hallazgos requieren definir los tratamientos con el dueño del dato antes de implementar la limpieza final.
+
+### 3.2. Disponibilidad temporal y posible fuga de información
+
+Es necesario verificar qué información estaría disponible al momento de realizar la predicción del lote del lunes a las 06:00.
+
+La columna `oferta_retencion_aceptada` requiere especial revisión: se debe establecer cuándo se registra su valor y si corresponde a información disponible antes de la predicción.
+
+Su exclusión del esquema canónico está documentada. La conclusión sobre una posible fuga de información permanece pendiente del análisis de Jorge Andrés y de la aclaración temporal del dueño del dato.
+
+Para completar este análisis se requieren:
+
+- Cantidad de registros y tasa de `churn` para cada valor de `oferta_retencion_aceptada`.
+- Comparación de las tasas entre los grupos.
+- Secuencia temporal del corte del extracto, la predicción, la campaña, el registro de la oferta y el desenlace a 30 días.
+- Conclusión sustentada sobre la disponibilidad de esta información al momento de predecir.
+
+**Estado:** sección preliminar, pendiente de incorporar la cuantificación y la conclusión del análisis de fuga.
+
 ## 4. Contrato de datos
 Implementado en `contracts/churn_contract.py` y verificado en la etapa `validate` de `dvc.yaml`.
 
