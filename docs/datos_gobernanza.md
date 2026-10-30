@@ -45,6 +45,8 @@ Esta ficha es la documentación oficial del extracto. Se entrega junto con el ar
 
 **Prof. Christian Andrés Candela Uribe · christiancandela@uniquindio.edu.co**
 
+## 2. Diagnóstico de calidad
+
 | Dimensión | Regla por verificar | Resultado | Acción pendiente |
 |---|---|---|---|
 | Completitud | Ninguna columna admite valores vacíos, según la ficha técnica. | Pendiente: cantidad y porcentaje de filas afectadas por columna. | Recibir el perfil de calidad y consultar el tratamiento de los faltantes con el dueño del dato. |
