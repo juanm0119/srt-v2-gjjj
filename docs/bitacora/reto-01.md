@@ -73,7 +73,7 @@ HU-11 (rollback en menos de 30 minutos): tiene el mayor rango PERT del backlog (
 
 | Integrante | Aporte al Reto 01 |
 |---|---|
-| Juan Manuel Adarve Cifuentes (Líder / PO) | [pendiente] |
+| Juan Manuel Adarve Cifuentes (Líder / PO) | Tag r01 y resolución de conflictos |
 | Jorge Eliecer Leighton Romero (MLOps Engineer) | Charter §7: tabla resumen del backlog y enlace al tablero, capacidad y decisión del déficit, marco de gestión, DoD, cronograma e historia peor estimada (§7.1–§7.5). Además, el KPI de rollback (§4), el ajuste de roles en §1, R-07 en riesgos.md, el spike en Trello, los registros en decision_log.md. |
 | Jorge Andrés Sánchez Martínez (Data Scientist) | Charter §8: riesgos principales y enlace a riesgos.md. |
 | Gloria Abimeleth Ardila Guerrero (Data Steward) | Charter §1 a §6: roles principales y secundarios, RACI y reglas para aplicarla.|
