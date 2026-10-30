@@ -45,14 +45,16 @@ Esta ficha es la documentación oficial del extracto. Se entrega junto con el ar
 
 **Prof. Christian Andrés Candela Uribe · christiancandela@uniquindio.edu.co**
 
-## 2. Diagnóstico de calidad
-| Dimensión | Regla verificada | Resultado | Acción |
+| Dimensión | Regla por verificar | Resultado | Acción pendiente |
 |---|---|---|---|
-| Completitud | | | |
-| Validez | | | |
-| Consistencia | | | |
-| Unicidad | | | |
-| Actualidad | | | |
+| Completitud | Ninguna columna admite valores vacíos, según la ficha técnica. | Pendiente: cantidad y porcentaje de filas afectadas por columna. | Recibir el perfil de calidad y consultar el tratamiento de los faltantes con el dueño del dato. |
+| Validez | Los tipos, dominios y rangos deben corresponder a la ficha técnica. | Pendiente: cantidad y porcentaje de filas afectadas por regla. | Identificar los valores concretos fuera del dominio y registrar el tratamiento autorizado. |
+| Consistencia | Si internet_service es none, monthly_charges debe ser menor o igual a 60. | Pendiente: cantidad y porcentaje de filas que incumplen RC-3. | Consultar al dueño del dato cómo tratar las inconsistencias encontradas. |
+| Unicidad | customer_id debe ser único en el archivo. | Pendiente: cantidad de códigos repetidos y filas involucradas, con su porcentaje. | Consultar el criterio para resolver duplicados y documentar la decisión. |
+
+El diagnóstico está pendiente de recibir y revisar los resultados
+agregados del perfil de calidad de la variante V2. Los tratamientos
+se incorporarán después de registrar las respuestas del dueño del dato.
 
 ## 3. Hallazgos del EDA
 
