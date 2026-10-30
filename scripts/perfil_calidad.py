@@ -1,6 +1,8 @@
 """Perfil de calidad del extracto: cifras por dimensión, sin identificadores."""
 import pandas as pd
+
 from src.common import CATEGORIES
+
 df = pd.read_csv("data/raw/crm_extracto.csv")
 n = len(df)
 
