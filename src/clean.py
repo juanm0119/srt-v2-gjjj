@@ -17,7 +17,21 @@ CANONICAS = [ID_COL, *FEATURES, TARGET]
 
 # Columnas que llegan en el extracto y no son canónicas: nombre → razón de la exclusión.
 COLUMNAS_EXCLUIDAS: dict[str, str] = {
-    # "<columna_no_canonica>": "<razón>",
+    "region": (
+        "No pertenece al esquema canónico del modelo definido en el contrato."
+    ),
+    "fecha_alta": (
+        "No pertenece al esquema canónico; se utiliza para revisar "
+        "la coherencia temporal del extracto."
+    ),
+    "fecha_corte": (
+        "No pertenece al esquema canónico; proporciona la referencia "
+        "temporal del extracto."
+    ),
+    "oferta_retencion_aceptada": (
+        "No pertenece al esquema canónico; se analiza su disponibilidad "
+        "temporal por posible fuga de información."
+    ),
 }
 
 
