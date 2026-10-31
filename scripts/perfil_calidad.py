@@ -38,3 +38,45 @@ print(f" copias exactas de otra fila: {df.duplicated().sum()}")
 cargo = pd.to_numeric(df["monthly_charges"], errors="coerce")
 rc3 = (df["internet_service"] == "none") & (cargo > 60)
 print(f"\n[Consistencia] sin internet con cargo > 60 (RC-3): {cifra(rc3.sum())}")
+
+# 5. Actualidad: coherencia temporal respecto al corte esperado.
+
+print("\n[Actualidad] coherencia de fechas")
+
+CORTE_ESPERADO = pd.Timestamp("2026-09-30")
+
+fecha_alta = pd.to_datetime(df["fecha_alta"], errors="coerce")
+fecha_corte = pd.to_datetime(df["fecha_corte"], errors="coerce")
+
+# Fechas inválidas
+print(f" fecha_alta inválida: {cifra(fecha_alta.isna().sum())}")
+print(f" fecha_corte inválida: {cifra(fecha_corte.isna().sum())}")
+
+# fecha_alta posterior a fecha_corte
+altas_posteriores = (
+    fecha_alta.notna()
+    & fecha_corte.notna()
+    & (fecha_alta > fecha_corte)
+)
+print(
+    f" fecha_alta posterior a fecha_corte: "
+    f"{cifra(altas_posteriores.sum())}"
+)
+
+# fecha_corte distinta del corte esperado
+corte_incorrecto = (
+    fecha_corte.notna()
+    & (fecha_corte != CORTE_ESPERADO)
+)
+
+ejemplos = (
+    fecha_corte[corte_incorrecto]
+    .value_counts()
+    .head(5)
+    .to_dict()
+)
+
+print(
+    f" fecha_corte diferente de {CORTE_ESPERADO.date()}: "
+    f"{cifra(corte_incorrecto.sum())} {ejemplos}"
+)
