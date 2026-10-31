@@ -59,9 +59,16 @@ El diagnóstico inicial corresponde al extracto crudo, antes de aplicar los trat
 | Validez | Los valores deben respetar los dominios y rangos establecidos en la ficha técnica. | `contract_type`: 192 filas con `Month-to-month` (2,7 %). `payment_method`: 82 filas con `tarjeta_debito` (1,2 %). `tenure_months`: 28 filas con −1 (0,4 %). `support_tickets`: 13 filas con 99 (0,2 %). | Confirmar el significado de los valores encontrados y registrar la normalización, corrección o exclusión autorizada para cada caso. |
 | Unicidad | Cada cliente debe estar representado por una sola fila y `customer_id` debe ser único. | Se reportan 84 filas con `customer_id` repetido (1,2 %) y 22 copias exactas de otra fila. | Acordar el criterio para resolver las repeticiones y determinar qué registro conservar. |
 | Consistencia | RC-3: cuando `internet_service` es `none`, `monthly_charges` debe ser menor o igual a 60. | Se identifican 17 filas que incumplen la regla (0,2 %). | Consultar con el dueño del dato cómo resolver estos casos y registrar el tratamiento autorizado. |
-| Actualidad | Revisar la coherencia entre `fecha_alta`, `fecha_corte` y el corte esperado del extracto: 2026-09-30. | Pendiente: la salida compartida no incluye los resultados de estas verificaciones temporales. | Solicitar a Jorge Andrés los resultados de las comprobaciones temporales para completar esta dimensión. |
+| Actualidad | Las fechas deben ser interpretables; `fecha_alta` debe ser menor o igual a `fecha_corte`, y `fecha_corte` debe corresponder a 2026-09-30. | `fecha_alta` reportada como inválida o no interpretable: 28 filas (0,4 %). `fecha_corte` inválida: 0 filas (0,0 %). `fecha_alta` posterior a `fecha_corte`: 20 filas (0,3 %). `fecha_corte` diferente de 2026-09-30: 0 filas (0,0 %). | Gestionar la corrección con el dueño del dato y registrar las inconsistencias como advertencias. Proponer conservar las filas cuyos campos canónicos sean válidos, considerando que `tenure_months` es confiable. Mantener las fechas fuera de la salida del modelo, según el esquema canónico. Tratamiento pendiente de acuerdo con el dueño. |
 
 **Interpretación de los conteos:** una misma fila puede presentar varios defectos y aparecer en distintos indicadores. Por ello, los conteos y porcentajes no deben sumarse para obtener el total de filas afectadas. Los indicadores de identificadores repetidos y copias exactas también deben conservarse por separado.
+
+**Interpretación de la coherencia temporal**
+
+- No se detectaron fechas de corte inválidas ni diferentes de 2026-09-30. Un corte distinto al esperado podría indicar que el registro pertenece a otro extracto o que su fecha fue registrada incorrectamente.
+- Se identificaron 20 filas con `fecha_alta` posterior a `fecha_corte`. Esto constituye una inconsistencia temporal: el cliente aparece dado de alta después de la fecha de referencia del extracto.
+- Se reportaron 28 valores de `fecha_alta` sin una fecha interpretable (`NaT`). Es necesario distinguir si corresponden a valores vacíos o a errores de formato o captura.
+- Los 28 casos de `fecha_alta` no interpretable podrían coincidir con los 28 faltantes ya registrados en completitud. Se debe verificar esa coincidencia antes de contabilizarlos como defectos adicionales.
 
 **Estado de los tratamientos:** pendiente de confirmar los acuerdos con el dueño del dato y registrar sus respuestas. Los resultados anteriores describen los problemas detectados en el extracto crudo; la cantidad de filas descartadas se determinará después de aplicar los tratamientos acordados.
 
