@@ -47,30 +47,46 @@ Esta ficha es la documentación oficial del extracto. Se entrega junto con el ar
 
 ## 2. Diagnóstico de calidad
 
-El diagnóstico inicial corresponde al extracto crudo, antes de aplicar los tratamientos de limpieza.
+### 2.1 Validación del contrato canónico sobre el extracto crudo
 
-- **Tamaño del extracto:** 7042 filas y 13 columnas.
-- **Fuente de los resultados:** perfil de calidad compartido por Jorge Andrés Sánchez.
-- **Porcentajes:** calculados sobre las 7042 filas del extracto y presentados con un decimal, según el reporte recibido.
+Jorge Andrés Sánchez compartió la siguiente salida de validación:
 
-| Dimensión | Regla evaluada | Resultado | Acción pendiente |
+- Archivo evaluado: `data/raw/crm_extracto.csv`.
+- Tamaño: 7042 filas y 13 columnas.
+- Resultado informado: 7 reglas incumplidas.
+- Indicador impreso en la salida recibida: `False`.
+
+| Campo o esquema | Incumplimiento detectado | Cantidad afectada |
+| --- | --- | --- |
+| `contract_type` | Valor `Month-to-month` fuera del dominio canónico. | 192 filas |
+| `customer_id` | Identificador repetido. | 84 filas |
+| `payment_method` | Valor `tarjeta_debito` fuera del dominio canónico. | 82 filas |
+| `monthly_charges` | Valores nulos en una columna que no admite vacíos. | 57 filas |
+| `tenure_months` | Valor −1 fuera del rango de 0 a 72 meses. | 28 filas |
+| `support_tickets` | Valor 99 fuera del rango de 0 a 50. | 13 filas |
+| Esquema de columnas | Presencia de `region`, `fecha_alta`, `fecha_corte` y `oferta_retencion_aceptada`, que no pertenecen a las nueve columnas canónicas. | 4 columnas |
+
+La cantidad de cuatro columnas adicionales corresponde a un incumplimiento estructural; no representa cuatro filas defectuosas.
+
+Los conteos no se suman para obtener un total de filas afectadas, porque una misma fila puede incumplir varias reglas.
+
+**Trazabilidad de la ejecución:** para utilizar esta salida como evidencia del contrato canónico original, debe corresponder a una ejecución anterior a la modificación de `contracts/churn_contract.py`. La etiqueta `[v2]` de la salida no demuestra, por sí sola, que las nuevas reglas ya estuvieran implementadas.
+
+### 2.2 Brecha entre el perfil de calidad y el contrato canónico
+
+La comparación identifica los siguientes hallazgos del perfil que no aparecen como controles específicos en la salida recibida:
+
+| Hallazgo del perfil | Filas afectadas | Resultado de la comparación | Control previsto |
 | --- | --- | --- | --- |
-| Completitud | Ninguna columna admite valores vacíos, según la ficha técnica. | `monthly_charges`: 57 filas con nulos (0,8 %). `fecha_alta`: 28 filas con nulos (0,4 %). Las otras 11 columnas presentan cero nulos. | Consultar con el dueño del dato el tratamiento autorizado para los faltantes de cada columna. |
-| Validez | Los valores deben respetar los dominios y rangos establecidos en la ficha técnica. | `contract_type`: 192 filas con `Month-to-month` (2,7 %). `payment_method`: 82 filas con `tarjeta_debito` (1,2 %). `tenure_months`: 28 filas con −1 (0,4 %). `support_tickets`: 13 filas con 99 (0,2 %). | Confirmar el significado de los valores encontrados y registrar la normalización, corrección o exclusión autorizada para cada caso. |
-| Unicidad | Cada cliente debe estar representado por una sola fila y `customer_id` debe ser único. | Se reportan 84 filas con `customer_id` repetido (1,2 %) y 22 copias exactas de otra fila. | Acordar el criterio para resolver las repeticiones y determinar qué registro conservar. |
-| Consistencia | RC-3: cuando `internet_service` es `none`, `monthly_charges` debe ser menor o igual a 60. | Se identifican 17 filas que incumplen la regla (0,2 %). | Consultar con el dueño del dato cómo resolver estos casos y registrar el tratamiento autorizado. |
-| Actualidad | Las fechas deben ser interpretables; `fecha_alta` debe ser menor o igual a `fecha_corte`, y `fecha_corte` debe corresponder a 2026-09-30. | `fecha_alta` reportada como inválida o no interpretable: 28 filas (0,4 %). `fecha_corte` inválida: 0 filas (0,0 %). `fecha_alta` posterior a `fecha_corte`: 20 filas (0,3 %). `fecha_corte` diferente de 2026-09-30: 0 filas (0,0 %). | Gestionar la corrección con el dueño del dato y registrar las inconsistencias como advertencias. Proponer conservar las filas cuyos campos canónicos sean válidos, considerando que `tenure_months` es confiable. Mantener las fechas fuera de la salida del modelo, según el esquema canónico. Tratamiento pendiente de acuerdo con el dueño. |
+| `internet_service = none` y `monthly_charges > 60` | 17 filas (0,2 %) | La salida no reporta el incumplimiento de esta relación entre columnas. | Incorporar RC-3 como regla bloqueante en los esquemas correspondientes. |
+| `fecha_alta` vacía | 28 filas (0,4 %) | La columna se rechaza por estar fuera del esquema canónico, pero no se informa específicamente su falta de completitud. | Registrar una advertencia sobre el extracto crudo y reportarla al dueño. |
+| `fecha_alta` posterior a `fecha_corte` | 20 filas (0,3 %) | La salida no reporta la inconsistencia temporal entre ambas fechas. | Registrar una advertencia de coherencia temporal y reportarla al dueño. |
 
-**Interpretación de los conteos:** una misma fila puede presentar varios defectos y aparecer en distintos indicadores. Por ello, los conteos y porcentajes no deben sumarse para obtener el total de filas afectadas. Los indicadores de identificadores repetidos y copias exactas también deben conservarse por separado.
+**Precisión sobre los duplicados:** las 22 copias exactas quedan cubiertas por el rechazo de identificadores repetidos. El contrato detecta el incumplimiento de unicidad, aunque no distingue las copias exactas de los registros discordantes. Esa distinción corresponde al perfil y al tratamiento de limpieza.
 
-**Interpretación de la coherencia temporal**
+**Precisión sobre las fechas:** rechazar `fecha_alta` y `fecha_corte` como columnas adicionales no equivale a comprobar sus valores o su coherencia temporal.
 
-- No se detectaron fechas de corte inválidas ni diferentes de 2026-09-30. Un corte distinto al esperado podría indicar que el registro pertenece a otro extracto o que su fecha fue registrada incorrectamente.
-- Se identificaron 20 filas con `fecha_alta` posterior a `fecha_corte`. Esto constituye una inconsistencia temporal: el cliente aparece dado de alta después de la fecha de referencia del extracto.
-- Se reportaron 28 valores de `fecha_alta` sin una fecha interpretable (`NaT`). Es necesario distinguir si corresponden a valores vacíos o a errores de formato o captura.
-- Los 28 casos de `fecha_alta` no interpretable podrían coincidir con los 28 faltantes ya registrados en completitud. Se debe verificar esa coincidencia antes de contabilizarlos como defectos adicionales.
-
-**Estado de los tratamientos:** pendiente de confirmar los acuerdos con el dueño del dato y registrar sus respuestas. Los resultados anteriores describen los problemas detectados en el extracto crudo; la cantidad de filas descartadas se determinará después de aplicar los tratamientos acordados.
+Los 28 valores de `fecha_alta` no interpretables reportados en actualidad podrían coincidir con los 28 faltantes de completitud; no deben contabilizarse como casos adicionales sin comprobar esa coincidencia.
 
 ## 3. Hallazgos del EDA
 
@@ -82,22 +98,46 @@ Las cuatro columnas adicionales son `region`, `fecha_alta`, `fecha_corte` y `ofe
 
 El perfil inicial identifica faltantes, valores fuera de los dominios o rangos, identificadores repetidos e incumplimientos de RC-3. Los conteos detallados se presentan en la sección 2. Estos hallazgos requieren definir los tratamientos con el dueño del dato antes de implementar la limpieza final.
 
-### 3.2. Disponibilidad temporal y posible fuga de información
+### 3.2 Disponibilidad temporal de las variables
 
-Es necesario verificar qué información estaría disponible al momento de realizar la predicción del lote del lunes a las 06:00.
+Se registra la clasificación inicial compartida por Jorge Andrés. La estabilidad de una variable y su disponibilidad al momento de predecir son criterios distintos.
 
-La columna `oferta_retencion_aceptada` requiere especial revisión: se debe establecer cuándo se registra su valor y si corresponde a información disponible antes de la predicción.
+Una variable puede cambiar con el tiempo y ser válida como entrada si se utiliza el valor que estaba disponible antes de puntuar el lote del lunes a las 06:00.
 
-Su exclusión del esquema canónico está documentada. La conclusión sobre una posible fuga de información permanece pendiente del análisis de Jorge Andrés y de la aclaración temporal del dueño del dato.
+| Columna | Clasificación inicial | Uso en el proyecto | Disponibilidad al momento de predecir |
+| --- | --- | --- | --- |
+| `customer_id` | Relativamente estable | Identificador; no es predictor. | Indicada como conocida por Jorge Andrés. |
+| `fecha_alta` | Relativamente estable | Verificación temporal; excluida del conjunto canónico. | Indicada como conocida por Jorge Andrés; sus defectos se documentan en el diagnóstico. |
+| `senior_citizen` | Relativamente estable | Variable predictora. | Indicada como conocida por Jorge Andrés. |
+| `region` | Relativamente estable | Variable auxiliar; excluida del conjunto canónico. | Indicada como conocida por Jorge Andrés. |
+| `tenure_months` | Relativamente estable | Variable predictora. | Indicada como conocida por Jorge Andrés; debe utilizarse la antigüedad correspondiente al momento de referencia. |
+| `contract_type` | Volátil | Variable predictora. | Confirmar que el valor utilizado corresponde al estado disponible antes de puntuar el lote. |
+| `internet_service` | Volátil | Variable predictora. | Confirmar que el valor utilizado corresponde al estado disponible antes de puntuar el lote. |
+| `payment_method` | Volátil | Variable predictora. | Confirmar que el valor utilizado corresponde al estado disponible antes de puntuar el lote. |
+| `monthly_charges` | Volátil | Variable predictora. | Confirmar que el cargo utilizado estaba disponible antes de puntuar el lote. |
+| `support_tickets` | Volátil | Variable predictora. | Confirmar que el conteo utiliza únicamente solicitudes conocidas antes de puntuar el lote. |
+| `oferta_retencion_aceptada` | Volátil y candidata a fuga | Excluida del conjunto canónico. | Confirmar cuándo se registra y si incorpora información posterior a la predicción. |
+| `fecha_corte` | Metadato temporal | Referencia del extracto; excluida del conjunto canónico. | La fecha consta en el archivo; debe verificarse que el extracto se entregue antes de utilizarlo para puntuar. |
+| `churn` | Variable objetivo | Etiqueta para entrenamiento y evaluación; no es predictor. | El desenlace futuro de un nuevo caso no se conoce al momento de predecir. |
 
-Para completar este análisis se requieren:
+La disponibilidad temporal no garantiza que el dato sea correcto: los problemas de calidad se verifican por separado.
 
-- Cantidad de registros y tasa de `churn` para cada valor de `oferta_retencion_aceptada`.
-- Comparación de las tasas entre los grupos.
-- Secuencia temporal del corte del extracto, la predicción, la campaña, el registro de la oferta y el desenlace a 30 días.
-- Conclusión sustentada sobre la disponibilidad de esta información al momento de predecir.
+### 3.3 Análisis de posible fuga de información
 
-**Estado:** sección preliminar, pendiente de incorporar la cuantificación y la conclusión del análisis de fuga.
+La principal candidata a fuga es `oferta_retencion_aceptada`. Su clasificación como volátil no demuestra por sí sola que exista fuga.
+
+Se debe confirmar si su valor se registra antes o después de la predicción y de la intervención de retención.
+
+Para completar el análisis se requieren:
+
+- Cantidad de registros para cada valor de `oferta_retencion_aceptada`.
+- Tasa de `churn` en cada grupo.
+- Explicación de las diferencias observadas.
+- Confirmación de la secuencia temporal: corte del extracto → lote del lunes → campaña → registro de la oferta → etiqueta a 30 días.
+
+La exclusión de esta columna del esquema canónico impide su entrada al modelo, pero no sustituye la explicación ni la cuantificación de su posible fuga.
+
+**Estado:** clasificación inicial documentada. Pendientes las confirmaciones de disponibilidad temporal y los resultados cuantitativos del análisis de fuga.
 
 ## 4. Contrato de datos
 Implementado en `contracts/churn_contract.py` y verificado en la etapa `validate` de `dvc.yaml`.
