@@ -40,3 +40,15 @@ def test_schema_change_scenario_breaks_contract():
     batch = generate_customers(n=300, seed=3, scenario="esquema")
     with pytest.raises(pandera.errors.SchemaErrors):
         features_schema.validate(batch, lazy=True)
+
+
+@pytest.mark.parametrize(
+    "columna",
+    ["region", "fecha_alta", "fecha_corte", "oferta_retencion_aceptada"],  # contrato §2.3
+)
+def test_rc5_columna_no_canonica_se_rechaza(sample_df, columna):
+    """RC-5: una tabla válida más una columna fuera de la §2.1 debe ser rechazada (esquema estricto)."""
+    df = sample_df.copy()
+    df[columna] = 0
+    with pytest.raises(pandera.errors.SchemaErrors):
+        training_schema.validate(df, lazy=True)
