@@ -22,6 +22,13 @@ _features = {
     "senior_citizen": pa.Column(int, pa.Check.isin([0, 1])),
 }
 
+RC3 = pa.Check(
+    lambda df: df["monthly_charges"].isna()
+    | (df["internet_service"] != "none")
+    | (df["monthly_charges"] <= 60),
+    error="RC-3: sin internet con cargo mayor a 60",
+)
+
 features_schema = pa.DataFrameSchema(
     columns=_features,
     strict=False,  # se permiten columnas adicionales (ej. customer_id, churn)
