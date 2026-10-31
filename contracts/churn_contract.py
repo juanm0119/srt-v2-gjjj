@@ -34,6 +34,7 @@ features_schema = pa.DataFrameSchema(
     strict=False,  # se permiten columnas adicionales (ej. customer_id, churn)
     coerce=True,
     name="churn_features",
+    checks=[RC3, pa.Check(lambda df: 0.05 <= df["churn"].mean() <= 0.60, ...)]
 )
 
 training_schema = pa.DataFrameSchema(
