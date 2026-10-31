@@ -102,11 +102,58 @@ Para completar este análisis se requieren:
 ## 4. Contrato de datos
 Implementado en `contracts/churn_contract.py` y verificado en la etapa `validate` de `dvc.yaml`.
 
-| Campo | Tipo | Reglas | Responsable | Acción si falla |
-|---|---|---|---|---|
-| tenure_months | int | 0–72 | Dueño del CRM | Detener pipeline |
-| contract_type | str | {month-to-month, one-year, two-year} | Dueño del CRM | Detener pipeline |
-| … | | | | |
+### 4.1 Negociación de tratamientos
+
+Las siguientes respuestas corresponden a las indicaciones del dueño del dato, presentadas con redacción normalizada.
+
+Los conteos corresponden al diagnóstico del extracto crudo de 7042 filas. Los descartes efectivos se determinarán al ejecutar la limpieza.
+
+| Defecto | Filas afectadas | Respuesta del dueño | Tratamiento de limpieza | Severidad en v2 |
+| --- | --- | --- | --- | --- |
+| `monthly_charges` nulo | 57 filas (0,8 %) | El dueño autoriza excluir los registros sin cargo mensual, previa revisión de los grupos de clientes afectados. | Excluir únicamente las filas con `monthly_charges` nulo y registrar el descarte efectivo. | Bloqueante (RC-2): el conjunto limpio debe conservar esta variable sin nulos. |
+| `tenure_months = -1` | 28 filas (0,4 %) | El dueño indica excluir los registros con antigüedad igual a −1, porque están fuera del rango permitido de 0 a 72 meses. | Excluir únicamente las filas con `tenure_months = -1`. | Bloqueante (RC-2): el conjunto limpio debe cumplir el rango canónico. |
+| `contract_type = Month-to-month` | 192 filas (2,7 %) | El dueño indica normalizar la etiqueta observada para ajustarla al valor canónico `month-to-month`. | Recodificar exclusivamente `Month-to-month` a `month-to-month`, conservar las filas y registrar el número de recodificaciones. | Bloqueante (RC-2): después de la limpieza no deben persistir categorías fuera del dominio. |
+| `payment_method = tarjeta_debito` | 82 filas (1,2 %) | El dueño autoriza recodificar `tarjeta_debito` a `credit_card`, considerando el cambio descrito en los medios de pago, y registrar una advertencia documental sobre la recodificación. | Recodificar exclusivamente `tarjeta_debito` a `credit_card`. Documentar la indicación del dueño, el criterio aplicado al extracto histórico y el número de casos recodificados. | Bloqueante (RC-2). La advertencia documental sobre la recodificación no sustituye la validación del dominio. |
+| `support_tickets = 99` | 13 filas (0,2 %) | El dueño indica excluir los registros con 99 tickets, porque superan el rango permitido de 0 a 50. | Excluir únicamente las filas con `support_tickets = 99` y registrar el descarte efectivo. | Bloqueante (RC-2): el conjunto limpio debe cumplir el rango canónico. |
+| `customer_id` repetido y copias exactas | 84 filas con identificador repetido (1,2 %) y 22 copias exactas reportadas | El dueño autoriza conservar una fila por grupo completamente idéntico. Para los registros discordantes del mismo cliente, indica conservar el registro con mayor `monthly_charges` y eliminar el de menor cargo. | Retirar las copias exactas. Para los identificadores que continúen repetidos, conservar el registro con mayor `monthly_charges` y descartar los restantes con menor cargo. Registrar los descartes efectivos. | Bloqueante (RC-1): cada `customer_id` debe aparecer una sola vez en el conjunto limpio. |
+| `internet_service = none` y `monthly_charges > 60` | 17 filas (0,2 %) | El dueño indica excluir los registros que incumplen la regla de consistencia RC-3. | Excluir las filas que cumplan simultáneamente ambas condiciones y registrar su descarte efectivo. | Bloqueante (RC-3): esta combinación no debe persistir en el conjunto limpio. |
+| `fecha_alta` posterior a `fecha_corte` | 20 filas (0,3 %) | El dueño indica conservar las filas cuando cumplan las reglas canónicas, considerando que `tenure_months` es confiable en estos casos. También indica registrar la inconsistencia y solicitar al CRM la revisión de la fecha. | Conservar el `tenure_months` confiable, registrar las inconsistencias como advertencias y mantener `fecha_alta` fuera de `clean.csv`. Esta condición temporal no descarta filas por sí misma. | Advertencia de coherencia temporal sobre una columna no canónica. |
+| `fecha_alta` vacía | 28 filas (0,4 %) | El dueño indica registrar una advertencia para que se revise el dato en origen. Autoriza conservar las filas que cumplan las reglas canónicas, dado que `fecha_alta` se excluye de la entrada del modelo. | Registrar los faltantes como advertencias y mantener `fecha_alta` fuera de `clean.csv`. No descartar filas por la ausencia de esta fecha; las demás reglas continúan aplicándose. | Advertencia de completitud sobre una columna no canónica. |
+
+### 4.2 Criterio de severidad
+
+Las reglas canónicas RC-1 a RC-5 conservan su carácter bloqueante. Si el conjunto limpio incumple alguna de ellas, su validación debe fallar y no debe utilizarse para entrenar o predecir.
+
+Las advertencias sobre columnas no canónicas se registran y se reportan al dueño del dato. Una advertencia documental asociada a una recodificación no reemplaza la validación bloqueante del dominio correspondiente.
+
+### 4.3 Control de los tratamientos
+
+Los tratamientos se aplicarán sobre los valores concretos acordados, conservando el extracto crudo para trazabilidad.
+
+Cada fila descartada se contará una sola vez, aunque presente varios defectos. Por tanto, los conteos del diagnóstico no deben sumarse directamente para estimar el descarte total.
+
+Los conteos finales y la proporción total de descarte se obtendrán al ejecutar `src/clean.py` y se registrarán en `reports/cleaning.json`. El equipo deberá justificar el límite máximo de descarte utilizado.
+
+La salida `clean.csv` conservará únicamente las nueve columnas canónicas. Excluir una columna no equivale a descartar filas.
+
+El criterio de mayor `monthly_charges` permite elegir entre registros con cargos diferentes. Si se detectan registros discordantes del mismo cliente con cargos exactamente iguales, se reportará el caso al dueño para definir un criterio adicional. Mientras persistan identificadores repetidos, RC-1 impedirá aprobar el conjunto limpio.
+
+### 4.4 Seguimiento de las advertencias de fechas
+
+Se registrarán y comunicarán al dueño del dato:
+
+- Los 20 casos con `fecha_alta` posterior a `fecha_corte`.
+- Los 28 casos con `fecha_alta` vacía.
+
+Estas condiciones no producirán descarte de filas por sí mismas. Los registros se conservarán cuando sus campos canónicos cumplan las demás reglas.
+
+La columna `fecha_alta` se excluirá de `clean.csv`, conforme al esquema canónico. Las inconsistencias permanecerán documentadas para que el dueño revise y corrija el proceso de origen.
+
+### 4.5 Estado de implementación
+
+Los tratamientos están documentados. Su implementación, ejecución y verificación permanecen pendientes.
+
+El documento se actualizará con los resultados reales de la limpieza y la validación del contrato v2.
 
 ## 5. Plan de gobernanza
 
