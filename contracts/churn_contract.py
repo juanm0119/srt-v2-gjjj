@@ -67,6 +67,3 @@ def discard_ok(cleaning_report: dict) -> bool:
     )
 
 MAX_DISCARD_SHARE = 0.05
-
-def discard_ok(cleaning_report: dict) -> bool:
-    return cleaning_report["proporcion_descartada"] <= MAX_DISCARD_SHARE
