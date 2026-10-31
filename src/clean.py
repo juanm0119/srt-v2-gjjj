@@ -1,10 +1,10 @@
-"""Etapa de limpieza (Reto 02): aplica los tratamientos negociados con el dueño del dato.
+"""Limpieza del extracto CRM con los tratamientos negociados en el Reto 02.
 
 Lee data/raw/crm_extracto.csv y escribe:
-  data/processed/clean.csv  → solo las 9 columnas canónicas (contrato §2.1)
-  reports/cleaning.json     → conteos por tratamiento, sin identificadores
+  data/processed/clean.csv: las nueve columnas canonicas.
+  reports/cleaning.json: conteos por tratamiento, sin identificadores.
 
-Ejecutar:  uv run python -m src.clean
+Ejecutar: uv run python -m src.clean
 """
 
 import json
@@ -15,11 +15,8 @@ from src.common import CLEAN_DATA, CRM_EXTRACT, FEATURES, ID_COL, REPORTS_DIR, T
 
 CANONICAS = [ID_COL, *FEATURES, TARGET]
 
-# Columnas que llegan en el extracto y no son canónicas: nombre → razón de la exclusión.
 COLUMNAS_EXCLUIDAS: dict[str, str] = {
-    "region": (
-        "No pertenece al esquema canónico del modelo definido en el contrato."
-    ),
+    "region": "No pertenece al esquema canónico del modelo definido en el contrato.",
     "fecha_alta": (
         "No pertenece al esquema canónico; se utiliza para revisar "
         "la coherencia temporal del extracto."
@@ -36,43 +33,114 @@ COLUMNAS_EXCLUIDAS: dict[str, str] = {
 
 
 def clean(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """Devuelve (conjunto limpio, informe). Cada tratamiento actúa sobre el VALOR NEGOCIADO."""
+    """Devuelve el conjunto limpio y los conteos de los tratamientos acordados."""
     n0 = len(df)
+    if n0 == 0:
+        raise ValueError("El extracto está vacío.")
+
+    faltantes = set(CANONICAS) - set(df.columns)
+    if faltantes:
+        raise ValueError(f"Faltan columnas canónicas: {sorted(faltantes)}")
+
+    no_documentadas = set(df.columns) - set(CANONICAS) - set(COLUMNAS_EXCLUIDAS)
+    if no_documentadas:
+        raise ValueError(
+            f"Hay columnas sin motivo de exclusión documentado: {sorted(no_documentadas)}"
+        )
+
+    if df[ID_COL].isna().any():
+        raise ValueError("Hay identificadores nulos sin un tratamiento acordado.")
+
+    df = df.copy().reset_index(drop=True)
     informe: dict = {"filas_entrada": n0, "tratamientos": {}}
     t = informe["tratamientos"]
-    df = df.copy()
 
-    # 1. Recodificaciones acordadas (un valor concreto → un valor del dominio).
-    #    Ejemplo de la forma (reemplácelo por sus acuerdos):
-    #    mascara = df["<columna>"] == "<valor_acordado>"
-    #    t["recodificado_<columna>"] = int(mascara.sum())
-    #    df.loc[mascara, "<columna>"] = "<valor_del_dominio>"
+    # 1. Recodificar exclusivamente los valores negociados.
+    mascara = df["contract_type"].eq("Month-to-month").fillna(False)
+    t["recodificado_contract_type"] = int(mascara.sum())
+    df.loc[mascara, "contract_type"] = "month-to-month"
 
-    # 2. Exclusiones acordadas: nombre del tratamiento → máscara de filas a excluir.
+    mascara = df["payment_method"].eq("tarjeta_debito").fillna(False)
+    t["recodificado_payment_method"] = int(mascara.sum())
+    df.loc[mascara, "payment_method"] = "credit_card"
+
+    # 2. Contar incidencias de fechas sin descartar filas por estas causas.
+    # Estas cifras no sustituyen las reglas de contracts/crm_warnings.py.
+    if "fecha_alta" in df.columns:
+        t["advertencia_fecha_alta_vacia"] = int(df["fecha_alta"].isna().sum())
+
+        if "fecha_corte" in df.columns:
+            altas = pd.to_datetime(
+                df["fecha_alta"], format="%Y-%m-%d", errors="coerce"
+            )
+            cortes = pd.to_datetime(
+                df["fecha_corte"], format="%Y-%m-%d", errors="coerce"
+            )
+            t["advertencia_fecha_alta_posterior_corte"] = int(altas.gt(cortes).sum())
+
+    # 3. Excluir los defectos concretos acordados, contando cada fila una vez.
     reglas_exclusion: dict[str, pd.Series] = {
-        # "<motivo>": df["<columna>"] == <valor_acordado>,
+        "monthly_charges_nulo": df["monthly_charges"].isna(),
+        "tenure_months_menos_uno": df["tenure_months"].eq(-1),
+        "support_tickets_99": df["support_tickets"].eq(99),
+        "rc3": df["internet_service"].eq("none") & df["monthly_charges"].gt(60),
     }
     excluir = pd.Series(False, index=df.index)
     for nombre, mascara in reglas_exclusion.items():
-        t[f"excluidas_{nombre}"] = int((mascara & ~excluir).sum())  # cada fila se cuenta una vez
+        mascara = mascara.fillna(False)
+        t[f"excluidas_{nombre}"] = int((mascara & ~excluir).sum())
         excluir |= mascara
-    df = df[~excluir]
+    df = df.loc[~excluir].copy()
 
-    informe["columnas_excluidas"] = COLUMNAS_EXCLUIDAS
+    # 4. Retirar copias exactas entre los registros que continúan.
+    duplicadas = df.duplicated(keep="first")
+    t["excluidas_duplicados_exactos"] = int(duplicadas.sum())
+    df = df.loc[~duplicadas].copy()
+
+    # 5. Comprobar si el mayor cargo permite elegir una única fila por cliente.
+    maximos = df.groupby(ID_COL)["monthly_charges"].transform("max")
+    candidatas = df.loc[df["monthly_charges"].eq(maximos)]
+    empates = candidatas[ID_COL].duplicated(keep=False)
+    if empates.any():
+        cantidad = int(candidatas.loc[empates, ID_COL].nunique())
+        raise ValueError(
+            f"Hay {cantidad} identificadores con registros distintos y el mismo "
+            "cargo máximo. El dueño debe definir un criterio de desempate."
+        )
+
+    # El criterio de mayor cargo se aplica entre las filas no excluidas.
+    df = df.sort_values("monthly_charges", ascending=False, kind="mergesort")
+    menor_cargo = df[ID_COL].duplicated(keep="first")
+    t["excluidas_duplicados_menor_cargo"] = int(menor_cargo.sum())
+    df = df.loc[~menor_cargo].copy()
+
+    informe["columnas_excluidas"] = {
+        columna: motivo
+        for columna, motivo in COLUMNAS_EXCLUIDAS.items()
+        if columna in df.columns
+    }
     informe["filas_salida"] = len(df)
     informe["proporcion_descartada"] = round(1 - len(df) / n0, 4)
-    df = df[CANONICAS].sort_values(ID_COL).reset_index(drop=True)  # orden fijo: limpieza determinista
+
+    df = df[CANONICAS].sort_values(ID_COL, kind="mergesort").reset_index(drop=True)
     return df, informe
 
 
-def main():
+def main() -> None:
     df, informe = clean(pd.read_csv(CRM_EXTRACT))
+
     CLEAN_DATA.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(CLEAN_DATA, index=False)
-    REPORTS_DIR.mkdir(exist_ok=True)
-    (REPORTS_DIR / "cleaning.json").write_text(json.dumps(informe, indent=2, ensure_ascii=False))
-    print(f"[clean] {informe['filas_entrada']} → {informe['filas_salida']} filas "
-          f"({informe['proporcion_descartada']:.1%} descartado)")
+    df.to_csv(CLEAN_DATA, index=False, encoding="utf-8")
+
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    (REPORTS_DIR / "cleaning.json").write_text(
+        json.dumps(informe, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        f"[clean] {informe['filas_entrada']} → {informe['filas_salida']} filas "
+        f"({informe['proporcion_descartada']:.1%} descartado)"
+    )
 
 
 if __name__ == "__main__":
