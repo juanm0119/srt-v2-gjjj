@@ -168,15 +168,11 @@ Las advertencias sobre columnas no canónicas se registran y se reportan al due�
 
 ### 4.3 Control de los tratamientos
 
-Los tratamientos se aplicarán sobre los valores concretos acordados, conservando el extracto crudo para trazabilidad.
+La limpieza aplica primero las recodificaciones acordadas y cuenta las advertencias de fechas sobre el extracto recibido. Después aplica las exclusiones por cargo faltante, antigüedad −1, tickets 99 e incumplimiento de RC-3.
 
-Cada fila descartada se contará una sola vez, aunque presente varios defectos. Por tanto, los conteos del diagnóstico no deben sumarse directamente para estimar el descarte total.
+Sobre los registros restantes, retira las copias exactas y conserva el mayor `monthly_charges` por cliente. Si existen registros distintos empatados en el cargo máximo, la ejecución se detiene para resolver el caso con el dueño.
 
-Los conteos finales y la proporción total de descarte se obtendrán al ejecutar `src/clean.py` y se registrarán en `reports/cleaning.json`. El equipo deberá justificar el límite máximo de descarte utilizado.
-
-La salida `clean.csv` conservará únicamente las nueve columnas canónicas. Excluir una columna no equivale a descartar filas.
-
-El criterio de mayor `monthly_charges` permite elegir entre registros con cargos diferentes. Si se detectan registros discordantes del mismo cliente con cargos exactamente iguales, se reportará el caso al dueño para definir un criterio adicional. Mientras persistan identificadores repetidos, RC-1 impedirá aprobar el conjunto limpio.
+Los descartes por tratamiento corresponden a este orden de aplicación. Cada fila retirada se cuenta una sola vez; por ello, los conteos de exclusión pueden diferir de los conteos iniciales del diagnóstico.
 
 ### 4.4 Seguimiento de las advertencias de fechas
 
