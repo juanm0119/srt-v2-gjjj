@@ -1,0 +1,23 @@
+{
+  "filas_entrada": 7042,
+  "tratamientos": {
+    "recodificado_contract_type": 192,
+    "recodificado_payment_method": 82,
+    "advertencia_fecha_alta_vacia": 28,
+    "advertencia_fecha_alta_posterior_corte": 20,
+    "excluidas_monthly_charges_nulo": 57,
+    "excluidas_tenure_months_menos_uno": 28,
+    "excluidas_support_tickets_99": 13,
+    "excluidas_rc3": 17,
+    "excluidas_duplicados_exactos": 21,
+    "excluidas_duplicados_menor_cargo": 20
+  },
+  "columnas_excluidas": {
+    "region": "No pertenece al esquema canónico del modelo definido en el contrato.",
+    "fecha_alta": "No pertenece al esquema canónico; se utiliza para revisar la coherencia temporal del extracto.",
+    "fecha_corte": "No pertenece al esquema canónico; proporciona la referencia temporal del extracto.",
+    "oferta_retencion_aceptada": "No pertenece al esquema canónico; se analiza su disponibilidad temporal por posible fuga de información."
+  },
+  "filas_salida": 6886,
+  "proporcion_descartada": 0.0222
+}
