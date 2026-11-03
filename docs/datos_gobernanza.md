@@ -271,9 +271,36 @@ El descarte observado en esta ejecución fue de 156 filas sobre
 7.042 registros de entrada. La proporción registrada en
 `reports/cleaning.json` es 0,0222, equivalente al 2,22 %.
 
-Queda pendiente documentar el valor aprobado de
-`MAX_DISCARD_SHARE`, su justificación técnica y el resultado
-de `discard_ok` sobre este informe.
+**Presupuesto máximo de descarte**
+
+Jorge Andrés confirmó que el valor configurado es
+`MAX_DISCARD_SHARE = 0.05`, equivalente al 5 %.
+
+Este límite establece una exigencia de conservación de al menos
+el 95 % de las filas de cada lote. Se documenta como una tolerancia
+operativa provisional, que deberá revisarse con nuevos extractos.
+
+En la ejecución actual se descartaron 156 de 7.042 registros.
+La proporción registrada en `reports/cleaning.json` es 0,0222,
+equivalente al 2,22 %, por debajo del límite configurado.
+
+Para un lote de 7.042 registros, el límite del 5 % permite hasta
+352 descartes. Esto deja un margen de 196 filas respecto al
+descarte observado, para admitir variaciones frente al extracto
+analizado manteniendo un control sobre la pérdida de registros.
+
+La regla `discard_ok` acepta el presupuesto cuando
+`proporcion_descartada <= MAX_DISCARD_SHARE`.
+Si la proporción supera el 5 %, debe rechazar el lote para revisar
+los defectos y los tratamientos aplicados.
+
+El umbral es una decisión operativa, no una estimación estadística
+del comportamiento normal. También debe revisarse si las
+exclusiones se concentran en determinados grupos de clientes.
+
+La evidencia de ejecución de `discard_ok` y de PS-5 se incorporará
+a la bitácora. Un lote cuya proporción descartada sea del 20 %
+debe incumplir este control.
 
 ### 4.4 Seguimiento de las advertencias de fechas
 
@@ -321,8 +348,15 @@ La cuantificación de PS-4 fue realizada por Jorge Andrés sobre
 los 7.042 registros del extracto crudo. Las tasas de churn fueron
 33,91 % para `oferta_retencion_aceptada = 0` y 3,47 % para el
 valor 1. Los resultados se documentan en la sección 3.3.
-Queda pendiente confirmar la disponibilidad temporal del campo
-respecto al momento de predicción.
+
+El límite de descarte fue confirmado por Jorge Andrés en
+`MAX_DISCARD_SHARE = 0.05` (5 %). Su justificación se documenta
+en la sección 4.3.
+
+La proporción descartada del lote actual es 0,0222 y se encuentra
+por debajo del límite configurado. Queda pendiente incorporar
+la evidencia de ejecución de `discard_ok` sobre el informe actual
+y la evidencia de rechazo del lote corrupto de PS-5.
 
 ## 5. Plan de gobernanza
 
