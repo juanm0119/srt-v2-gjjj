@@ -142,22 +142,53 @@ Una variable puede cambiar con el tiempo y ser válida como entrada si se utiliz
 
 La disponibilidad temporal no garantiza que el dato sea correcto: los problemas de calidad se verifican por separado.
 
-### 3.3 Análisis de posible fuga de información
+### 3.3. Cuantificación y análisis temporal de la posible fuga
 
-La principal candidata a fuga es `oferta_retencion_aceptada`. Su clasificación como volátil no demuestra por sí sola que exista fuga.
+Jorge Andrés ejecutó PS-4 sobre `data/raw/crm_extracto.csv`,
+compuesto por 7.042 registros. Agrupó los registros por
+`oferta_retencion_aceptada` y calculó la media de `churn` y
+la cantidad de filas de cada grupo.
 
-Se debe confirmar si su valor se registra antes o después de la predicción y de la intervención de retención.
+Como `churn` toma los valores 0 y 1, su media representa
+la proporción de registros con cancelación del servicio.
 
-Para completar el análisis se requieren:
+| `oferta_retencion_aceptada` | Registros | Media de `churn` | Tasa de churn |
+|---|---:|---:|---:|
+| 0 | 5.544 | 0,339105 | 33,91 % |
+| 1 | 1.498 | 0,034713 | 3,47 % |
+| **Total** | **7.042** | — | — |
 
-- Cantidad de registros para cada valor de `oferta_retencion_aceptada`.
-- Tasa de `churn` en cada grupo.
-- Explicación de las diferencias observadas.
-- Confirmación de la secuencia temporal: corte del extracto → lote del lunes → campaña → registro de la oferta → etiqueta a 30 días.
+La diferencia entre las tasas es de aproximadamente 30,44 puntos
+porcentuales. Se observa una asociación fuerte entre la variable
+y el desenlace. Este resultado, por sí solo, no demuestra que la
+aceptación de la oferta cause una reducción del churn.
 
-La exclusión de esta columna del esquema canónico impide su entrada al modelo, pero no sustituye la explicación ni la cuantificación de su posible fuga.
+**Línea de tiempo del escenario del reto**
 
-**Estado:** clasificación inicial documentada. Pendientes las confirmaciones de disponibilidad temporal y los resultados cuantitativos del análisis de fuga.
+Corte → lote del lunes → campaña → registro de la oferta →
+etiqueta de churn a 30 días.
+
+El modelo debe utilizar información disponible al generar el lote
+del lunes. Si `oferta_retencion_aceptada` contiene el resultado de
+la campaña posterior, incorporarla como predictor introduciría
+información que todavía no se conocía al realizar la predicción.
+Esto constituye fuga de información y puede producir una
+evaluación demasiado optimista del modelo.
+
+**Tratamiento aplicado**
+
+La columna `oferta_retencion_aceptada` se excluye del conjunto
+canónico mediante `src/clean.py`. Su razón de exclusión está
+registrada en `reports/cleaning.json`. El conjunto limpio conserva
+únicamente las nueve columnas canónicas.
+
+**Estado de la evidencia**
+
+La cuantificación de PS-4 está realizada. La ficha técnica describe
+el campo como el resultado de la última oferta registrada, pero
+no precisa cuándo se obtuvo ese resultado. Debe confirmarse con
+el dueño del dato que corresponde a una oferta posterior al lote,
+para cerrar la conclusión temporal sobre la fuga.
 
 ## 4. Contrato de datos
 Implementado en `contracts/churn_contract.py` y verificado en la etapa `validate` de `dvc.yaml`.
