@@ -88,6 +88,26 @@ La comparación identifica los siguientes hallazgos del perfil que no aparecen c
 
 Los 28 valores de `fecha_alta` no interpretables reportados en actualidad podrían coincidir con los 28 faltantes de completitud; no deben contabilizarse como casos adicionales sin comprobar esa coincidencia.
 
+**Resultado actualizado del contrato v2 y de las advertencias**
+
+La validación inicial del contrato canónico sobre el extracto crudo
+reportó siete reglas incumplidas. Después de incorporar RC-3, el
+contrato v2 reportó ocho reglas incumplidas, incluyendo 17 filas con
+`internet_service = "none"` y `monthly_charges > 60`.
+
+El esquema de advertencias detectó 28 filas con `fecha_alta` vacía
+y 20 con `fecha_alta` posterior a `fecha_corte`. Estas situaciones
+se documentan como advertencias y no generan exclusión de filas
+por sí mismas.
+
+El conjunto limpio, compuesto por 6.886 filas y nueve columnas
+canónicas, fue validado por Jorge Andrés con el contrato v2,
+obteniendo el resultado «sin faltas».
+
+La detección de columnas adicionales mediante RC-5 verifica el
+esquema. La explicación y cuantificación de la posible fuga de
+información se documentan por separado en la sección 3.
+
 ## 3. Hallazgos del EDA
 
 ### 3.1. Hallazgos iniciales del extracto
@@ -160,6 +180,54 @@ Los conteos corresponden al diagnóstico del extracto crudo de 7042 filas. Los d
 | `fecha_alta` posterior a `fecha_corte` | 20 filas (0,3 %) | El dueño indica conservar las filas cuando cumplan las reglas canónicas, considerando que `tenure_months` es confiable en estos casos. También indica registrar la inconsistencia y solicitar al CRM la revisión de la fecha. | Conservar el `tenure_months` confiable, registrar las inconsistencias como advertencias y mantener `fecha_alta` fuera de `clean.csv`. Esta condición temporal no descarta filas por sí misma. | Advertencia de coherencia temporal sobre una columna no canónica. |
 | `fecha_alta` vacía | 28 filas (0,4 %) | El dueño indica registrar una advertencia para que se revise el dato en origen. Autoriza conservar las filas que cumplan las reglas canónicas, dado que `fecha_alta` se excluye de la entrada del modelo. | Registrar los faltantes como advertencias y mantener `fecha_alta` fuera de `clean.csv`. No descartar filas por la ausencia de esta fecha; las demás reglas continúan aplicándose. | Advertencia de completitud sobre una columna no canónica. |
 
+**Decisión sobre los valores faltantes de `monthly_charges`**
+
+Se aplicó la exclusión acordada de las filas con `monthly_charges`
+vacío. No se realizó imputación. La decisión evita introducir un
+cargo estimado sin una referencia sustentada para este tratamiento.
+Los 57 registros afectados representan aproximadamente el 0,8 %
+del extracto original.
+
+**Resultados de ejecución de los tratamientos**
+
+Los siguientes conteos proceden de `reports/cleaning.json`.
+Las recodificaciones y las advertencias no representan filas
+descartadas.
+
+| Tipo | Tratamiento aplicado | Conteo de ejecución |
+|---|---|---:|
+| Recodificación | `contract_type`: `Month-to-month` → `month-to-month` | 192 |
+| Recodificación | `payment_method`: `tarjeta_debito` → `credit_card` | 82 |
+| Advertencia | `fecha_alta` vacía | 28 |
+| Advertencia | `fecha_alta` posterior a `fecha_corte` | 20 |
+| Exclusión de filas | `monthly_charges` nulo | 57 |
+| Exclusión de filas | `tenure_months` igual a -1 | 28 |
+| Exclusión de filas | `support_tickets` igual a 99 | 13 |
+| Exclusión de filas | Incumplimiento de RC-3: sin internet y cargo mayor a 60 | 17 |
+| Exclusión de filas | Copias exactas adicionales | 21 |
+| Exclusión de filas | Duplicados discordantes con menor cargo mensual | 20 |
+| **Total descartado** | **Filas excluidas, contadas una sola vez** | **156** |
+
+**Balance de filas**
+
+- Entrada: 7.042 filas.
+- Descartadas: 156 filas.
+- Salida: 6.886 filas.
+- Proporción descartada registrada: 0,0222, equivalente al 2,22 %.
+
+El diagnóstico inicial identificó 22 copias exactas adicionales
+sobre el extracto crudo. La etapa de deduplicación eliminó 21,
+después de las exclusiones anteriores. Los conteos corresponden
+a etapas distintas del proceso.
+
+Las advertencias sobre fechas no eliminan filas por sí mismas.
+Los registros se conservan cuando cumplen las reglas canónicas.
+
+Se excluyen las columnas `region`, `fecha_alta`, `fecha_corte` y
+`oferta_retencion_aceptada`, con las razones documentadas en
+`reports/cleaning.json`. El conjunto final contiene nueve columnas
+canónicas.
+
 ### 4.2 Criterio de severidad
 
 Las reglas canónicas RC-1 a RC-5 conservan su carácter bloqueante. Si el conjunto limpio incumple alguna de ellas, su validación debe fallar y no debe utilizarse para entrenar o predecir.
@@ -185,11 +253,39 @@ Estas condiciones no producirán descarte de filas por sí mismas. Los registros
 
 La columna `fecha_alta` se excluirá de `clean.csv`, conforme al esquema canónico. Las inconsistencias permanecerán documentadas para que el dueño revise y corrija el proceso de origen.
 
-### 4.5 Estado de implementación
+### 4.5. Implementación, ejecución y validación de la limpieza
 
-Los tratamientos están documentados. Su implementación, ejecución y verificación permanecen pendientes.
+La limpieza fue implementada en `src/clean.py` y ejecutada mediante:
 
-El documento se actualizará con los resultados reales de la limpieza y la validación del contrato v2.
+`uv run python -m src.clean`
+
+El proceso leyó 7.042 filas del extracto crudo, descartó 156 y
+conservó 6.886. La proporción descartada registrada en el informe
+es 0,0222, equivalente al 2,22 %.
+
+Se generaron los siguientes resultados:
+
+- `data/processed/clean.csv`: conjunto limpio con 6.886 filas
+  y nueve columnas canónicas.
+- `reports/cleaning.json`: conteos agregados por tratamiento,
+  razones de exclusión de columnas y proporción descartada,
+  sin identificadores de clientes.
+
+Jorge Andrés ejecutó la validación v2 sobre el conjunto limpio
+y obtuvo el resultado «sin faltas».
+
+Sobre el extracto crudo, el contrato v2 reportó ocho reglas
+incumplidas, incluida RC-3. El esquema de advertencias detectó
+28 filas con `fecha_alta` vacía y 20 con fecha de alta posterior
+al corte.
+
+Estos resultados respaldan la ejecución de la limpieza y la
+validación del conjunto resultante. La comprobación del límite
+máximo de descarte debe documentarse con el umbral definido
+y justificado por el equipo.
+
+La cuantificación de la fuga de información se completará en
+la sección 3.3 con los resultados de PS-4 de Jorge Andrés.
 
 ## 5. Plan de gobernanza
 
