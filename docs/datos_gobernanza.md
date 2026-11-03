@@ -144,10 +144,9 @@ La disponibilidad temporal no garantiza que el dato sea correcto: los problemas 
 
 ### 3.3. Cuantificación y análisis temporal de la posible fuga
 
-Jorge Andrés ejecutó PS-4 sobre `data/raw/crm_extracto.csv`,
-compuesto por 7.042 registros. Agrupó los registros por
-`oferta_retencion_aceptada` y calculó la media de `churn` y
-la cantidad de filas de cada grupo.
+Jorge Andrés ejecutó PS-4 sobre el extracto crudo, compuesto por
+7.042 registros. Agrupó los datos por `oferta_retencion_aceptada`
+y calculó la media de `churn` y la cantidad de registros.
 
 Como `churn` toma los valores 0 y 1, su media representa
 la proporción de registros con cancelación del servicio.
@@ -159,36 +158,31 @@ la proporción de registros con cancelación del servicio.
 | **Total** | **7.042** | — | — |
 
 La diferencia entre las tasas es de aproximadamente 30,44 puntos
-porcentuales. Se observa una asociación fuerte entre la variable
-y el desenlace. Este resultado, por sí solo, no demuestra que la
-aceptación de la oferta cause una reducción del churn.
+porcentuales. El resultado muestra una asociación fuerte entre
+la variable y el desenlace, pero no demuestra por sí solo una
+relación causal ni confirma su disponibilidad al predecir.
 
 **Línea de tiempo del escenario del reto**
 
 Corte → lote del lunes → campaña → registro de la oferta →
 etiqueta de churn a 30 días.
 
-El modelo debe utilizar información disponible al generar el lote
-del lunes. Si `oferta_retencion_aceptada` contiene el resultado de
-la campaña posterior, incorporarla como predictor introduciría
-información que todavía no se conocía al realizar la predicción.
-Esto constituye fuga de información y puede producir una
-evaluación demasiado optimista del modelo.
+Si el valor de `oferta_retencion_aceptada` corresponde al resultado
+de la campaña posterior al lote, utilizarlo como predictor
+introduciría información que todavía no estaba disponible
+al realizar la predicción. Esto constituye fuga de información.
 
 **Tratamiento aplicado**
 
-La columna `oferta_retencion_aceptada` se excluye del conjunto
-canónico mediante `src/clean.py`. Su razón de exclusión está
-registrada en `reports/cleaning.json`. El conjunto limpio conserva
-únicamente las nueve columnas canónicas.
+La columna se excluye del conjunto canónico mediante
+`src/clean.py`. Su razón de exclusión está registrada en
+`reports/cleaning.json`.
 
-**Estado de la evidencia**
+**Estado**
 
-La cuantificación de PS-4 está realizada. La ficha técnica describe
-el campo como el resultado de la última oferta registrada, pero
-no precisa cuándo se obtuvo ese resultado. Debe confirmarse con
-el dueño del dato que corresponde a una oferta posterior al lote,
-para cerrar la conclusión temporal sobre la fuga.
+La cuantificación de PS-4 está realizada. Queda pendiente confirmar
+con el dueño del dato cuándo se obtuvo el resultado de la última
+oferta y su relación temporal con la predicción del lunes.
 
 ## 4. Contrato de datos
 Implementado en `contracts/churn_contract.py` y verificado en la etapa `validate` de `dvc.yaml`.
@@ -273,6 +267,14 @@ Sobre los registros restantes, retira las copias exactas y conserva el mayor `mo
 
 Los descartes por tratamiento corresponden a este orden de aplicación. Cada fila retirada se cuenta una sola vez; por ello, los conteos de exclusión pueden diferir de los conteos iniciales del diagnóstico.
 
+El descarte observado en esta ejecución fue de 156 filas sobre
+7.042 registros de entrada. La proporción registrada en
+`reports/cleaning.json` es 0,0222, equivalente al 2,22 %.
+
+Queda pendiente documentar el valor aprobado de
+`MAX_DISCARD_SHARE`, su justificación técnica y el resultado
+de `discard_ok` sobre este informe.
+
 ### 4.4 Seguimiento de las advertencias de fechas
 
 Se registrarán y comunicarán al dueño del dato:
@@ -315,15 +317,21 @@ validación del conjunto resultante. La comprobación del límite
 máximo de descarte debe documentarse con el umbral definido
 y justificado por el equipo.
 
-La cuantificación de la fuga de información se completará en
-la sección 3.3 con los resultados de PS-4 de Jorge Andrés.
+La cuantificación de PS-4 fue realizada por Jorge Andrés sobre
+los 7.042 registros del extracto crudo. Las tasas de churn fueron
+33,91 % para `oferta_retencion_aceptada = 0` y 3,47 % para el
+valor 1. Los resultados se documentan en la sección 3.3.
+Queda pendiente confirmar la disponibilidad temporal del campo
+respecto al momento de predicción.
 
 ## 5. Plan de gobernanza
 
-Estado: borrador del Reto 02. Se documentan los responsables asignados,
-la minimización prevista y una clasificación preliminar de los datos.
-La política de acceso al remoto y el alcance de la autorización
-requieren confirmación antes del cierre del reto.
+Estado: documentación del Reto 02 con limpieza ejecutada y conjunto
+limpio validado mediante el contrato v2. Se documentan los responsables,
+la minimización aplicada y una clasificación preliminar de los datos.
+La política de acceso al remoto está propuesta y pendiente de acuerdo
+con MLOps y el equipo. Se mantiene documentada la consulta sobre el
+alcance de la autorización para entrenar el SRT y priorizar llamadas.
 
 | Elemento | Decisión |
 |---|---|
@@ -331,7 +339,7 @@ requieren confirmación antes del cierre del reto.
 | Política de acceso al remoto | Propuesta pendiente de acuerdo: lectura para los cuatro roles autorizados del equipo GJJJ y escritura al remoto para MLOps. Se propone un remoto DVC privado con acceso autenticado. Su ubicación y los permisos concretos deben definirse con MLOps; se implementarán en el Reto 03. El extracto y el archivo limpio no se publican en Git. |
 | Datos personales, sensibles y campo protegido | El extracto se trata como información personal seudonimizada: customer_id puede vincularse con la identidad mediante la correspondencia que conserva Facturación. La clasificación preliminar por columna aparece en el apartado 5.1. senior_citizen es el atributo protegido para evaluar equidad en el SRT. |
 | Finalidad autorizada | Posición preliminar: depende del alcance de la autorización. La fidelización y el análisis estadístico descritos en la ficha son coherentes con el propósito del SRT. Debe consultarse al responsable de protección de datos, a través del dueño del dato, si la autorización cubre el entrenamiento del modelo y la priorización de llamadas, y qué información adicional debe darse a los titulares. |
-| Minimización | La limpieza prevé conservar las nueve columnas canónicas. Se excluyen region, fecha_alta, fecha_corte y oferta_retencion_aceptada, con los motivos del apartado 5.2, que coinciden con COLUMNAS_EXCLUIDAS en src/clean.py. Queda pendiente verificar la salida de la ejecución y su reporte. |
+| Minimización | La limpieza conserva las nueve columnas canónicas. Se excluyen `region`, `fecha_alta`, `fecha_corte` y `oferta_retencion_aceptada`, con los motivos del apartado 5.2, coincidentes con `COLUMNAS_EXCLUIDAS` en `src/clean.py` y con `reports/cleaning.json`. La ejecución produjo 6.886 filas y nueve columnas; Jorge Andrés verificó que el conjunto limpio pasa el contrato v2 sin faltas. |
 | Versionamiento (DVC y remoto) | pendiente (versión lite) |
 | Linaje (crudo → validado → train/test → modelo) | pendiente (versión lite) |
 | Retención | pendiente (versión lite) |
@@ -366,12 +374,12 @@ distintas. El conjunto completo mantiene tratamiento restringido.
 
 ### 5.2. Columnas excluidas del archivo limpio
 
-| Columna | Motivo registrado en COLUMNAS_EXCLUIDAS |
+| Columna | Motivo registrado en `COLUMNAS_EXCLUIDAS` |
 |---|---|
-| region | No pertenece al esquema canónico del modelo definido en el contrato. |
-| fecha_alta | No pertenece al esquema canónico; se utiliza para revisar la coherencia temporal del extracto. |
-| fecha_corte | No pertenece al esquema canónico; proporciona la referencia temporal del extracto. |
-| oferta_retencion_aceptada | No pertenece al esquema canónico; se analiza su disponibilidad temporal por posible fuga de información. |
+| `region` | No pertenece al esquema canónico del modelo definido en el contrato. |
+| `fecha_alta` | No pertenece al esquema canónico; se utiliza para revisar la coherencia temporal del extracto. |
+| `fecha_corte` | No pertenece al esquema canónico; proporciona la referencia temporal del extracto. |
+| `oferta_retencion_aceptada` | No pertenece al esquema canónico; se analiza su disponibilidad temporal por posible fuga de información. |
 
 La exclusión se refiere al archivo limpio destinado al modelo.
 El extracto original conserva estas columnas para las revisiones
@@ -379,12 +387,29 @@ de calidad, trazabilidad y fuga de información.
 
 ### 5.3. Confirmaciones pendientes
 
-- Con MLOps y el equipo: ubicación del remoto de datos y permisos
-  concretos de lectura y escritura.
+-### 5.3. Verificaciones realizadas y confirmaciones pendientes
+
+**Verificaciones realizadas**
+
+- La limpieza procesó 7.042 filas y produjo 6.886 filas de salida.
+- Se descartaron 156 filas. La proporción registrada en
+  `reports/cleaning.json` es 0,0222, equivalente al 2,22 %.
+- El conjunto limpio contiene nueve columnas canónicas y pasa
+  el contrato v2 sin faltas, según la validación de Jorge Andrés.
+- Las cuatro columnas excluidas y sus motivos coinciden entre
+  este documento y el informe de limpieza.
+
+**Confirmaciones pendientes**
+
+- Con MLOps y el equipo: acordar la ubicación prevista del remoto
+  de datos y los permisos concretos de lectura y escritura.
+  Su implementación corresponde al Reto 03.
 - Con el dueño del dato y el responsable de protección de datos:
-  alcance de la autorización para entrenar el SRT y priorizar llamadas.
-- Con las evidencias de ejecución: correspondencia entre la
-  minimización documentada, clean.csv y reports/cleaning.json.
+  precisar el alcance de la autorización para entrenar el SRT
+  y priorizar llamadas.
+- Con el dueño del dato: confirmar cuándo se registra
+  `oferta_retencion_aceptada` respecto a la predicción del lunes.
+  La cuantificación de PS-4 está documentada en la sección 3.3. 
 
 Referencia normativa:
 [Ley 1581 de 2012, artículos 3, 4 y 5](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981).
