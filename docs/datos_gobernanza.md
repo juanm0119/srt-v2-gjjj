@@ -162,27 +162,47 @@ porcentuales. El resultado muestra una asociación fuerte entre
 la variable y el desenlace, pero no demuestra por sí solo una
 relación causal ni confirma su disponibilidad al predecir.
 
-**Línea de tiempo del escenario del reto**
+**Línea de tiempo del escenario del Reto 02**
 
 Corte → lote del lunes → campaña → registro de la oferta →
 etiqueta de churn a 30 días.
 
-Si el valor de `oferta_retencion_aceptada` corresponde al resultado
-de la campaña posterior al lote, utilizarlo como predictor
-introduciría información que todavía no estaba disponible
-al realizar la predicción. Esto constituye fuga de información.
+**Conclusión sobre la fuga de información**
+
+De acuerdo con la secuencia operativa establecida en el bloque
+4.2 del Reto 02, el resultado de la oferta de retención se registra
+después de la predicción utilizada para generar el lote del lunes.
+
+Por tanto, en el escenario del reto, `oferta_retencion_aceptada`
+constituye fuga de información: su valor incorpora el resultado
+de una actuación posterior al momento de predicción.
+
+Utilizar esta columna como predictor permitiría al modelo
+aprovechar información que todavía no estaba disponible al
+priorizar los clientes y podría producir una evaluación
+demasiado optimista.
+
+Los resultados de PS-4 cuantifican la asociación con el desenlace.
+La conclusión temporal se sustenta en la secuencia del reto;
+las diferencias entre tasas no demuestran por sí solas causalidad.
 
 **Tratamiento aplicado**
 
-La columna se excluye del conjunto canónico mediante
-`src/clean.py`. Su razón de exclusión está registrada en
-`reports/cleaning.json`.
+La columna `oferta_retencion_aceptada` se excluye del conjunto
+canónico mediante `src/clean.py`. Su exclusión está registrada
+en `reports/cleaning.json`.
 
-**Estado**
+**Verificación adicional con el dueño del dato**
 
-La cuantificación de PS-4 está realizada. Queda pendiente confirmar
-con el dueño del dato cuándo se obtuvo el resultado de la última
-oferta y su relación temporal con la predicción del lunes.
+Se conserva la siguiente pregunta para documentar con mayor
+precisión el origen del campo:
+
+¿En qué momento se registra el resultado de la última oferta
+de retención y a qué campaña corresponde?
+
+Esta consulta complementa la trazabilidad del dato. La conclusión
+de fuga para el escenario del Reto 02 queda sustentada en la
+línea de tiempo definida por el ejercicio.
 
 ## 4. Contrato de datos
 Implementado en `contracts/churn_contract.py` y verificado en la etapa `validate` de `dvc.yaml`.
@@ -354,9 +374,19 @@ El límite de descarte fue confirmado por Jorge Andrés en
 en la sección 4.3.
 
 La proporción descartada del lote actual es 0,0222 y se encuentra
-por debajo del límite configurado. Queda pendiente incorporar
-la evidencia de ejecución de `discard_ok` sobre el informe actual
-y la evidencia de rechazo del lote corrupto de PS-5.
+por debajo del límite configurado. 
+
+La prueba PS-5 fue realizada por Jorge Eliecer Leighton, MLOps.
+El lote corrupto presentó un 21,7 % de filas descartadas,
+superior al límite configurado de
+`MAX_DISCARD_SHARE = 0.05` (5 %).
+
+La función `discard_ok` devolvió `False` y el lote fue bloqueado.
+Este resultado evidencia que el control rechaza un lote cuya
+proporción descartada supera el presupuesto definido en §4.3.
+
+El extracto original registra una proporción descartada de
+0,0222 (2,22 %), inferior al límite del 5 %.
 
 ## 5. Plan de gobernanza
 
@@ -419,9 +449,7 @@ La exclusión se refiere al archivo limpio destinado al modelo.
 El extracto original conserva estas columnas para las revisiones
 de calidad, trazabilidad y fuga de información.
 
-### 5.3. Confirmaciones pendientes
-
--### 5.3. Verificaciones realizadas y confirmaciones pendientes
+### 5.3. Verificaciones realizadas y confirmaciones pendientes
 
 **Verificaciones realizadas**
 
@@ -441,9 +469,16 @@ de calidad, trazabilidad y fuga de información.
 - Con el dueño del dato y el responsable de protección de datos:
   precisar el alcance de la autorización para entrenar el SRT
   y priorizar llamadas.
-- Con el dueño del dato: confirmar cuándo se registra
-  `oferta_retencion_aceptada` respecto a la predicción del lunes.
-  La cuantificación de PS-4 está documentada en la sección 3.3. 
+
+**Verificación adicional de trazabilidad**
+
+Se conserva para el dueño del dato la pregunta sobre el momento
+de registro y la campaña a la que corresponde la última oferta
+de retención. Esta consulta complementa la documentación del
+origen del campo.
+
+La conclusión de fuga para el escenario del Reto 02 y la exclusión
+de la columna ya están documentadas en §3.3.
 
 Referencia normativa:
 [Ley 1581 de 2012, artículos 3, 4 y 5](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981).
