@@ -45,7 +45,8 @@ def main() -> int:
     for nombre, fallas in (("bloqueante", bloqueantes), ("advertencia", advertencias)):
         for r, n in fallas.items():
             print(f"[validate] {'❌' if nombre == 'bloqueante' else '⚠️'} {nombre}: {r} → {n}")
-    print(f"[validate] {'✅ contrato v2 OK' if not bloqueantes else '❌ el contrato v2 falló: no se entrena'}")
+    estado = "✅ contrato v2 OK" if not bloqueantes else "❌ el contrato v2 falló: no se entrena"
+    print(f"[validate] {estado}")
     return 0 if not bloqueantes else 1
 
 
