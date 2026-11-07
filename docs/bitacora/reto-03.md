@@ -107,12 +107,12 @@ Sin la etapa `ingest`.
 - `reports/gate.json`: `challenger_version: "1"`, `"passed": true`.
 
 #### Resultado del quality gate
-| Regla del gate                          | Valor   | Resultado |
-|-----------------------------------------|--------:|:---------:|
+| Regla del gate                          |Valor   | Resultado |
+|-----------------------------------------|--------------------:|:---------:|
 | roc_auc ≥ 0,75                          | 0,8325  | ✅        |
 | recall_at_eval ≥ 0,70 (umbral 0,30)     | 0,756   | ✅        |
 | precision_at_eval ≥ 0,45 (umbral 0,30)  | 0,5268  | ✅        |
-| No regresión vs. @champion              | sin champion previo | ✅ |
+| No regresión vs. @champion              | sin champion previo |✅ |
 ### Juan Manuel Adarve Cifuentes
 * Aprobación de PRs #30, #31 y #32
 * Se prueba promover la v1 como @champion
@@ -153,9 +153,28 @@ uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5050
 | e5c21dd8e19e44519e014f60c8a9c37f | **Random Forest**   |  0.8221 | 0.6764 |    0.5592 | **0.034**                 |                 456 |              14652.59 | **Si**     |
 | d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |    0.575 |                    0.1186 |                 440 |              14920.05 | Si      |
 | d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | Si      |
+### Jorge Andres Sánchez
+* comprobación de que es reproducible
+```terminaloutput
+'data\raw\crm_extracto.csv.dvc' didn't change, skipping
+Stage 'clean' didn't change, skipping
+Stage 'validate' didn't change, skipping
+Stage 'prepare' didn't change, skipping
+Stage 'train' didn't change, skipping
+Stage 'evaluate' didn't change, skipping
+Data and pipelines are up to date.
+```
 ## Noviembre 7 del 2026
 ### Gloria Abimeleth Ardila
 * Actualizado los datos de gobernanza en `datos_gobernanza.md`
 ### Jorge Eliecer Leighton
 * Aprobación e integración del PR #34
+
+## Métricas por integrante
+| Integrante | Qué corrió | roc_auc | recall_gap_senior_citizen |
+|---|---|---|---|
+| Jorge Leighton | Baseline (Regresión Logística) | 0,8325 | 0,116 |
+| Gloria Ardila| Random Forest | 0,8221 | 0,034 |
+| Gloria Ardila| Gradient Boosting | 0,8295 | 0,1186 |
+| Jorge Sanchez | Reproducible desde cero| coincide con los de Gloria | coincide con los de Gloria|
 
