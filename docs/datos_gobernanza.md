@@ -390,32 +390,31 @@ El extracto original registra una proporción descartada de
 
 ## 5. Plan de gobernanza
 
-Estado: documentación del Reto 02 con limpieza ejecutada y conjunto
-limpio validado mediante el contrato v2. Se documentan los responsables,
-la minimización aplicada y una clasificación preliminar de los datos.
-La política de acceso al remoto está propuesta y pendiente de acuerdo
-con MLOps y el equipo. Se mantiene documentada la consulta sobre el
-alcance de la autorización para entrenar el SRT y priorizar llamadas.
+**Estado.** Documentación del Reto 02 con limpieza ejecutada y conjunto limpio validado mediante el contrato v2. Se documentan los responsables, la minimización aplicada y una clasificación preliminar de los datos. En el Reto 03 se implementó el remoto DVC `almacen` en Google Drive con acceso restringido y se comprobó la recuperación de archivos desde el computador de la Data Steward. Se mantiene documentada la consulta sobre el alcance de la autorización para entrenar el SRT y priorizar llamadas.
 
 | Elemento | Decisión |
 |---|---|
-| Propietario y custodio del dato | Dueño del dato: Jefatura de CRM y Facturación de Conecta Andina; el docente representa este rol en el ejercicio. Custodia técnica asignada en el proyecto: Jorge Eliecer Leighton Romero, MLOps. Gloria Ardila realiza el seguimiento documental como Data Steward. |
-| Política de acceso al remoto | Propuesta pendiente de acuerdo: lectura para los cuatro roles autorizados del equipo GJJJ y escritura al remoto para MLOps. Se propone un remoto DVC privado con acceso autenticado. Su ubicación y los permisos concretos deben definirse con MLOps; se implementarán en el Reto 03. El extracto y el archivo limpio no se publican en Git. |
-| Datos personales, sensibles y campo protegido | El extracto se trata como información personal seudonimizada: customer_id puede vincularse con la identidad mediante la correspondencia que conserva Facturación. La clasificación preliminar por columna aparece en el apartado 5.1. senior_citizen es el atributo protegido para evaluar equidad en el SRT. |
-| Finalidad autorizada | Posición preliminar: depende del alcance de la autorización. La fidelización y el análisis estadístico descritos en la ficha son coherentes con el propósito del SRT. Debe consultarse al responsable de protección de datos, a través del dueño del dato, si la autorización cubre el entrenamiento del modelo y la priorización de llamadas, y qué información adicional debe darse a los titulares. |
-| Minimización | La limpieza conserva las nueve columnas canónicas. Se excluyen `region`, `fecha_alta`, `fecha_corte` y `oferta_retencion_aceptada`, con los motivos del apartado 5.2, coincidentes con `COLUMNAS_EXCLUIDAS` en `src/clean.py` y con `reports/cleaning.json`. La ejecución produjo 6.886 filas y nueve columnas; Jorge Andrés verificó que el conjunto limpio pasa el contrato v2 sin faltas. |
-| Versionamiento (DVC y remoto) | pendiente (versión lite) |
+| Propietario y custodio del dato | **Dueño del dato.** Jefatura de CRM y Facturación de Conecta Andina. El docente representa este rol en el ejercicio. **Custodia técnica.** Jorge Eliecer Leighton Romero (MLOps). Gloria Ardila realiza el seguimiento documental como Data Steward. |
+| Política de acceso al remoto | **Ubicación.** El remoto predeterminado de DVC, `almacen`, utiliza la carpeta privada `srt-remoto-v2-gjjj` de Google Drive, accesible mediante Drive para ordenadores. <br> **Administración y escritura.** Jorge Eliecer Leighton Romero (MLOps) es el Propietario de la carpeta, administra sus permisos y es el único integrante con escritura para publicar archivos mediante `dvc push`. <br> **Lectura y justificación.** Gloria Abimeleth Ardila Guerrero (Data Steward) tiene permiso de Lector para verificar el acceso, la recuperación y la reproducibilidad. Jorge Andrés Sánchez (Data Scientist) tiene permiso de Lector para recuperar los datos versionados y ejecutar las corridas comparativas. Juan Manuel Adarve Cifuentes (Líder/PO) tiene permiso de Lector para verificar, cuando su función de aprobación lo requiera, que las evidencias de reproducibilidad corresponden a los datos y artefactos versionados del modelo evaluado. Su revisión ordinaria se apoya en métricas y reportes agregados. <br> **Concesión.** El acceso general está en **Restringido** y se concede a cuentas individuales. Como el remoto contiene un extracto CRM seudonimizado, cada permiso se limita a las tareas del rol que lo requiere. Gloria registra la solicitud y su justificación. El dueño del dato autoriza las nuevas altas o ampliaciones y Leighton habilita el permiso aprobado en Drive. <br> **Retiro.** Leighton revoca el acceso cuando una persona sale del equipo, cambia de rol o deja de requerirlo. Gloria registra la fecha y el motivo del retiro. |
+| Datos personales, sensibles y campo protegido | El extracto contiene información personal seudonimizada. Facturación conserva la correspondencia que permite vincular `customer_id` con la identidad. La clasificación preliminar por columna aparece en el apartado 5.1. `senior_citizen` es el atributo protegido para evaluar equidad en el SRT. |
+| Finalidad autorizada | El alcance de la autorización está por confirmar. La fidelización y el análisis estadístico descritos en la ficha son coherentes con el propósito del SRT. Debe consultarse al responsable de protección de datos, a través del dueño del dato, si la autorización cubre el entrenamiento del modelo y la priorización de llamadas, y qué información adicional debe darse a los titulares. |
+| Minimización | La limpieza conserva las nueve columnas canónicas. Se excluyen `region`, `fecha_alta`, `fecha_corte` y `oferta_retencion_aceptada`, con los motivos del apartado 5.2, coincidentes con `COLUMNAS_EXCLUIDAS` en `src/clean.py` y con `reports/cleaning.json`. La ejecución produjo 6.886 filas y nueve columnas. Jorge Andrés verificó que el conjunto limpio pasa el contrato v2 sin faltas. |
+| Versionamiento (DVC y remoto) | DVC versiona el extracto CRM, el conjunto limpio, las particiones de entrenamiento y prueba y el archivo del modelo. Git conserva el código, los parámetros, las referencias de DVC, `dvc.lock`, las métricas y la configuración compartida sin credenciales. La ruta particular de cada computador se registra en `.dvc/config.local`, fuera de Git. Leighton respaldó el baseline en `almacen` con `dvc push` y verificó la sincronización con `dvc status -c`. El PR #32 integró los cambios en `main` y la etiqueta `baseline` quedó publicada sobre `5d3b5b9`. Gloria recuperó cinco archivos mediante `uv run dvc pull` en una comprobación inicial de acceso desde su computador. |
 | Linaje (crudo → validado → train/test → modelo) | pendiente (versión lite) |
 | Retención | pendiente (versión lite) |
 | Seudonimización | pendiente (versión lite) |
 
+**Calidad de datos y equidad en el Reto 03.** El pipeline utilizó el extracto CRM de V2. La limpieza pasó de 7.042 a 6.886 registros, con un descarte del 2,2 %, inferior al máximo acordado del 5 %. La validación del contrato v2 registró cero incumplimientos bloqueantes y dejó las advertencias como conteos agregados en `reports/validation.json`.
+
+La política de V2 fija en 10 puntos porcentuales la brecha máxima de recall entre los grupos definidos por `senior_citizen`. La regresión logística del baseline obtuvo 11,60 puntos, Gradient Boosting obtuvo 11,86 y Random Forest obtuvo 3,40. Por ello, se recomienda Random Forest como candidato para V2. Frente al baseline, redujo la brecha en 8,20 puntos porcentuales, con una disminución de 0,0104 en ROC-AUC y de 377,83 en el ahorro neto estimado frente al azar.
+
+En la PS-4, Leighton documentó que la regresión logística superó el gate técnico inicial y fue promovida a `@champion` en su registro local. Random Forest alcanza los tres mínimos técnicos absolutos documentados. Para decidir su promoción, el equipo debe verificar la comparabilidad de las particiones, aplicar el gate completo frente al champion vigente y comprobar la capacidad operativa de 900 contactos semanales. Los 456 contactos de Random Forest corresponden al conjunto de prueba. La comparación completa se registra en el [registro de decisiones](decision_log.md).
+
 ### 5.1. Clasificación preliminar de las columnas
 
-La clasificación considera los campos dentro de un registro asociado
-a un cliente. Debe revisarse con el responsable de protección de datos
-si el tratamiento produce nuevas inferencias o riesgos de discriminación.
+La clasificación considera los campos dentro de un registro asociado a un cliente. Debe revisarse con el responsable de protección de datos si el tratamiento produce nuevas inferencias o riesgos de discriminación.
 
-| Columna | Dato personal | Dato sensible identificado por su contenido* | Atributo protegido del SRT | Razón |
+| Columna | Dato personal | Dato sensible identificado por su contenido\* | Atributo protegido del SRT | Razón |
 |---|---|---|---|---|
 | customer_id | Sí | No identificado | No | Identificador seudonimizado con correspondencia custodiada por Facturación. |
 | tenure_months | Sí | No identificado | No | Antigüedad del servicio de un cliente. |
@@ -424,61 +423,45 @@ si el tratamiento produce nuevas inferencias o riesgos de discriminación.
 | payment_method | Sí | No identificado | No | Información de su medio de pago. |
 | monthly_charges | Sí | No identificado | No | Información del cargo individual facturado. |
 | support_tickets | Sí | No identificado | No | Historial de solicitudes de soporte. |
-| senior_citizen | Sí | No identificado | Sí | Informa si el titular tiene 65 años o más; se utiliza para evaluar equidad. |
+| senior_citizen | Sí | No identificado | Sí | Informa si el titular tiene 65 años o más. Se utiliza para evaluar equidad. |
 | churn | Sí | No identificado | No | Resultado de la cancelación del servicio de un cliente. |
 | region | Sí | No identificado | No | Localización asociada a la instalación del cliente. |
 | fecha_alta | Sí | No identificado | No | Fecha de inicio de su relación de servicio. |
 | fecha_corte | No por sí sola | No identificado | No | Metadato común que señala la fecha de referencia del extracto. |
 | oferta_retencion_aceptada | Sí | No identificado | No | Resultado de una oferta comercial asociada al cliente. |
 
-*“No identificado” es una valoración preliminar a partir del diccionario
-de variables, no una conclusión jurídica definitiva. Ser un atributo
-protegido para evaluar equidad y ser un dato sensible son clasificaciones
-distintas. El conjunto completo mantiene tratamiento restringido.
+\*“No identificado” es una valoración preliminar a partir del diccionario de variables, no una conclusión jurídica definitiva. Ser un atributo protegido para evaluar equidad y ser un dato sensible son clasificaciones distintas. El conjunto completo mantiene tratamiento restringido.
 
 ### 5.2. Columnas excluidas del archivo limpio
 
 | Columna | Motivo registrado en `COLUMNAS_EXCLUIDAS` |
 |---|---|
 | `region` | No pertenece al esquema canónico del modelo definido en el contrato. |
-| `fecha_alta` | No pertenece al esquema canónico; se utiliza para revisar la coherencia temporal del extracto. |
-| `fecha_corte` | No pertenece al esquema canónico; proporciona la referencia temporal del extracto. |
-| `oferta_retencion_aceptada` | No pertenece al esquema canónico; se analiza su disponibilidad temporal por posible fuga de información. |
+| `fecha_alta` | No pertenece al esquema canónico. Se utiliza para revisar la coherencia temporal del extracto. |
+| `fecha_corte` | No pertenece al esquema canónico. Proporciona la referencia temporal del extracto. |
+| `oferta_retencion_aceptada` | No pertenece al esquema canónico. Se analiza su disponibilidad temporal por posible fuga de información. |
 
-La exclusión se refiere al archivo limpio destinado al modelo.
-El extracto original conserva estas columnas para las revisiones
-de calidad, trazabilidad y fuga de información.
+La exclusión se refiere al archivo limpio destinado al modelo. El extracto original conserva estas columnas para las revisiones de calidad, trazabilidad y fuga de información.
 
 ### 5.3. Verificaciones realizadas y confirmaciones pendientes
 
 **Verificaciones realizadas**
 
 - La limpieza procesó 7.042 filas y produjo 6.886 filas de salida.
-- Se descartaron 156 filas. La proporción registrada en
-  `reports/cleaning.json` es 0,0222, equivalente al 2,22 %.
-- El conjunto limpio contiene nueve columnas canónicas y pasa
-  el contrato v2 sin faltas, según la validación de Jorge Andrés.
-- Las cuatro columnas excluidas y sus motivos coinciden entre
-  este documento y el informe de limpieza.
+- Se descartaron 156 filas. La proporción registrada en `reports/cleaning.json` es 0,0222, equivalente al 2,22 %.
+- El conjunto limpio contiene nueve columnas canónicas y pasa el contrato v2 sin faltas, según la validación de Jorge Andrés.
+- Las cuatro columnas excluidas y sus motivos coinciden entre este documento y el informe de limpieza.
 
 **Confirmaciones pendientes**
 
-- Con MLOps y el equipo: acordar la ubicación prevista del remoto
-  de datos y los permisos concretos de lectura y escritura.
-  Su implementación corresponde al Reto 03.
-- Con el dueño del dato y el responsable de protección de datos:
-  precisar el alcance de la autorización para entrenar el SRT
-  y priorizar llamadas.
+- Precisar con el dueño del dato y el responsable de protección de datos el alcance de la autorización para entrenar el SRT y priorizar llamadas.
 
 **Verificación adicional de trazabilidad**
 
-Se conserva para el dueño del dato la pregunta sobre el momento
-de registro y la campaña a la que corresponde la última oferta
-de retención. Esta consulta complementa la documentación del
-origen del campo.
+Se conserva para el dueño del dato la pregunta sobre el momento de registro y la campaña a la que corresponde la última oferta de retención. Esta consulta complementa la documentación del origen del campo.
 
-La conclusión de fuga para el escenario del Reto 02 y la exclusión
-de la columna ya están documentadas en §3.3.
+La conclusión de fuga para el escenario del Reto 02 y la exclusión de la columna ya están documentadas en §3.3.
 
-Referencia normativa:
+**Referencia normativa**
+
 [Ley 1581 de 2012, artículos 3, 4 y 5](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981).
