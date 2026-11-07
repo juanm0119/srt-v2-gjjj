@@ -3,7 +3,7 @@
   "model_version": "1",
   "model_type": "logistic_regression",
   "decision_threshold": 0.35,
-  "run_id": "f55d1dca9fab4e209f6b931a4ddb1a8c",
-  "train_data_md5": "f24c4cc517419616f559028d0f63110c",
-  "trained_at": "2026-10-17T17:18:02+00:00"
+  "run_id": "5bccb6e56e25498690e242b7dc7f02af",
+  "train_data_md5": "dbf6f1c8177597a547ce68bf569abc20",
+  "trained_at": "2026-11-07T00:52:11+00:00"
 }
