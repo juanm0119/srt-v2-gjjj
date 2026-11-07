@@ -243,7 +243,7 @@ uv sync --frozen
 
 # 3. Configuración con remoto de datos
 # Si el remoto es una carpeta sincronizada
-uv run dvc remote modify --local almacen url "https://drive.google.com/drive/u/1/folders/1q3tWcAPa26_a1YO1jru7uOJMlAFl7ztQ"
+uv run dvc remote modify --local almacen url "<<en base al computador>>"
 
 # 4. descargar los datos del remoto
 uv run dvc pull
