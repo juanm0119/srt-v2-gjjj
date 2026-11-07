@@ -8,6 +8,13 @@
 roc_auc 0,8325 · recall_at_eval 0,756 · precision_at_eval 0,5268 · ahorro neto vs. aleatorio 15 030.
 __brecha de recall senior_citizen 0,116 (límite V2 ≤ 0,10)__
 * Aprobación de PR #33
+* Bloque 2 (PR #32):
+  * Remoto almacen en G:\Mi unidad\srt-remoto-v2-gjjj, con acceso restringido. .dvc/config sin credenciales (commit 0347cb8).
+  * Reinicio de mlflow.db.
+  * dvc repro --force: train = 5508, test = 1378. Un segundo dvc repro respondió "Data and pipelines are up to date."
+  * scripts.promote: la v1 quedó como @champion, con la aprobación de Juan.
+  * Commit d80007e, dvc push de 5 archivos y dvc status -c en sync.
+  * Tag baseline sobre 5d3b5b9.
 * PS-1
 **Base:** `main` con el tag `baseline`
 
@@ -167,12 +174,78 @@ Data and pipelines are up to date.
 ## Noviembre 7 del 2026
 ### Gloria Abimeleth Ardila
 * Actualizado los datos de gobernanza en `datos_gobernanza.md`
+* # PS-2 · Recuperar sin regenerar
+
+**Responsable:** Gloria
+**Entorno:** copia aparte del repositorio (`srt-v2-gjjj-prueba-baseline`)
+
+#### 1. Configuración del remoto en su computador
+
+```powershell
+uv run dvc remote add --local --force -d almacen "G:\.shortcut-targets-by-id\<id>\srt-remoto-v2-gjjj"
+```
+
+> **Corrección al README:** para los lectores, la carpeta compartida aparece en `G:\.shortcut-targets-by-id\...` y no en `G:\Mi unidad\...`.
+
+#### 2. Estado antes de recuperar
+
+```powershell
+uv run dvc status -c -r almacen
+```
+
+Los 5 archivos aparecieron como ausentes en el computador:
+
+```terminaloutput
+deleted:  data\processed\clean.csv
+deleted:  data\raw\crm_extracto.csv
+deleted:  models\model.joblib
+deleted:  data\processed\test.csv
+deleted:  data\processed\train.csv
+```
+
+#### 3. Recuperación desde el remoto
+
+```powershell
+uv run dvc pull -r almacen
+```
+
+```terminaloutput
+A  data\processed\clean.csv
+A  data\processed\test.csv
+A  data\processed\train.csv
+A  data\raw\crm_extracto.csv
+A  models\model.joblib
+5 files fetched and 5 files added
+```
+
+#### 4. Verificación sin re-ejecutar ninguna etapa
+
+```powershell
+uv run dvc status
+```
+
+```terminaloutput
+Data and pipelines are up to date.
+```
+
+#### Resumen
+
+| Paso | Comando | Resultado |
+|---|---|---|
+| Configurar remoto | `dvc remote add --local --force -d almacen ...` | Remoto `almacen` configurado de forma local |
+| Estado previo | `dvc status -c -r almacen` | 5 archivos ausentes (`deleted`) |
+| Recuperar | `dvc pull -r almacen` | 5 archivos descargados y agregados |
+| Verificar | `dvc status` | Datos y pipelines al día |
+
+#### Conclusión
+
+Los artefactos se recuperaron desde el remoto sin regenerarlos: no fue necesario volver a ejecutar ninguna etapa del pipeline.
 ### Jorge Eliecer Leighton
 * Aprobación e integración del PR #34
 
 ## Métricas por integrante
 | Integrante | Qué corrió | roc_auc | recall_gap_senior_citizen |
-|---|---|---|---|
+|----------------|--------------------------------|----------------------------|---------------------------|
 | Jorge Leighton | Baseline (Regresión Logística) | 0,8325 | 0,116 |
 | Gloria Ardila| Random Forest | 0,8221 | 0,034 |
 | Gloria Ardila| Gradient Boosting | 0,8295 | 0,1186 |
