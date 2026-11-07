@@ -1,2 +1,5 @@
 [core]
     autostage = true
+    remote = almacen
+['remote "almacen"']
+    url = G:\Mi unidad\srt-remoto-v2-gjjj
