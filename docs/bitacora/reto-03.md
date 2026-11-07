@@ -121,7 +121,7 @@ Updating lock file 'dvc.lock'
 Ran experiment(s): liked-dado
 Experiment results have been applied to your workspace.
 ```
-* PS-3
+* Bloque 3. comparación de corridas 
 ```shell
 uv run dvc exp show --only-changed --md
 ```
