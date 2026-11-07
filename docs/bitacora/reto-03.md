@@ -51,7 +51,7 @@ Pasos ejecutados, en este orden:
 
 - `git diff` del puntero: vacío.
 - `git status`: vacío.
-* PS-5
+* Paso 5
 ```terminaloutput
 (gpad-mlops-template) PS C:\cursos\srt-v2-gjj> Select-String -Path src/prepare.py -Pattern "RAW_DATA"
 (gpad-mlops-template) PS C:\cursos\srt-v2-gjj> uv run python -m src.clean
@@ -137,6 +137,22 @@ uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5050
 | e5c21dd8e19e44519e014f60c8a9c37f | **Random Forest**   |  0.8221 | 0.6764 |    0.5592 | **0.034**                 |                 456 |              14652.59 | **Cumple**     |
 | d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |    0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
 | d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | No cumple      |
+* PS-4 · El registro tiene un champion aprobado
+
+**Responsable:** Jorge Eliecer Leighton Romero (MLOps Engineer)  
+**Fecha:** 2026-11-06  
+**Registro:** MLflow local (reiniciado antes del baseline)
+
+- Alias de `gpad-churn-model`: la **versión 1** es simultáneamente `@challenger` y `@champion`.
+- `reports/gate.json`: `challenger_version: "1"`, `"passed": true`.
+
+#### Resultado del quality gate
+| Regla del gate                          | Valor   | Resultado |
+|-----------------------------------------|--------:|:---------:|
+| roc_auc ≥ 0,75                          | 0,8325  | ✅        |
+| recall_at_eval ≥ 0,70 (umbral 0,30)     | 0,756   | ✅        |
+| precision_at_eval ≥ 0,45 (umbral 0,30)  | 0,5268  | ✅        |
+| No regresión vs. @champion              | sin champion previo | ✅ |
 ## Noviembre 7 del 2026
 ### Gloria Abimeleth Ardila
 * Actualizado los datos de gobernanza en `datos_gobernanza.md`
