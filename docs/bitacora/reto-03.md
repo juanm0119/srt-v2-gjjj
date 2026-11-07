@@ -239,7 +239,30 @@ Data and pipelines are up to date.
 
 #### Conclusión
 
-Los artefactos se recuperaron desde el remoto sin regenerarlos: no fue necesario volver a ejecutar ninguna etapa del pipeline. PS-3
+Los artefactos se recuperaron desde el remoto sin regenerarlos: no fue necesario volver a ejecutar ninguna etapa del pipeline.
+
+#### PS-3 · Reproducción desde cero en ≤ 5 comandos
+
+| Campo | Detalle |
+|---|---|
+| **Quién** | *(nombre de quien lo corrió)* |
+| **Sistema operativo** | *(por ejemplo, Windows 11)* |
+| **Verificado por** | Docente, en la sesión del *(fecha)* |
+
+#### Pasos
+
+Los del `README.md`:
+
+1. `git clone`
+2. `uv sync --frozen`
+3. Configuración local del remoto
+4. `dvc pull`
+5. `dvc repro`
+
+#### Resultado
+
+Se obtuvieron las mismas métricas del baseline (`roc_auc` = **0,8325**). Lo verificó el docente en la sesión del *(fecha)*.
+
 ### Jorge Eliecer Leighton
 * Aprobación e integración del PR #34
 
