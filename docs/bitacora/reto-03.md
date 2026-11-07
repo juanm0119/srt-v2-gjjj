@@ -239,7 +239,7 @@ Data and pipelines are up to date.
 
 #### Conclusión
 
-Los artefactos se recuperaron desde el remoto sin regenerarlos: no fue necesario volver a ejecutar ninguna etapa del pipeline.
+Los artefactos se recuperaron desde el remoto sin regenerarlos: no fue necesario volver a ejecutar ninguna etapa del pipeline. PS-3
 ### Jorge Eliecer Leighton
 * Aprobación e integración del PR #34
 
