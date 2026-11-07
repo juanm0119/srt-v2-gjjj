@@ -53,8 +53,8 @@ Los tratamientos los decide el dueño del dato (A en la RACI para el contrato de
 
 | Corrida (run_id)                 | Modelo              | roc_auc | recall | precision | recall_gap_senior_citizen | customers_contacted | net_savings_vs_random | ¿Pasa el gate? |
 |----------------------------------|---------------------|--------:|-------:|----------:|--------------------------:|--------------------:|----------------------:|----------------|
-| e5c21dd8e19e44519e014f60c8a9c37f | Random Forest       |  0.8221 | 0.6764 |    0.5592 |                     0.034 |                 456 |              14652.59 | No cumple      |
+| e5c21dd8e19e44519e014f60c8a9c37f | Random Forest       |  0.8221 | 0.6764 |    0.5592 |                     0.034 |                 456 |              14652.59 | Cumple      |
 | d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |     0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
-| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | Cumple         |
+| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | No cumple         |
 
-De acuerdo a las métricas, el modelo de Regresión Logística es el más apto cumpliendo el gate.
+De acuerdo gate en base a la politica de V2, se recomienda el modelo de Random Forest, aunque Champion es Regresión Logísticael 

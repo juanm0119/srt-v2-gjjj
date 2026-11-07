@@ -8,6 +8,27 @@
 roc_auc 0,8325 · recall_at_eval 0,756 · precision_at_eval 0,5268 · ahorro neto vs. aleatorio 15 030.
 __brecha de recall senior_citizen 0,116 (límite V2 ≤ 0,10)__
 * Aprobación de PR #33
+* PS-1
+```terminaloutput
+(gpad-mlops-template) PS C:\cursos\srt-v2-gjj> Select-String -Path src/prepare.py -Pattern "RAW_DATA"
+(gpad-mlops-template) PS C:\cursos\srt-v2-gjj> uv run python -m src.clean
+[clean] 7042 → 6886 filas (2.2% descartado)
+(gpad-mlops-template) PS C:\cursos\srt-v2-gjj> uv run python -m src.validate; echo "código: $LASTEXITCODE"
+[validate] ⚠ advertencia: (tabla) · fecha_alta posterior a fecha_corte → 20
+[validate] ⚠ advertencia: (tabla) · fecha_alta vacía → 28
+[validate] ✔ contrato v2 OK
+código: 0
+(gpad-mlops-template) PS C:\cursos\srt-v2-gjj> cat reports/validation.json
+{
+  "valid": true,
+  "bloqueantes": {},
+  "advertencias": {
+    "(tabla) · fecha_alta posterior a fecha_corte": 20,
+    "(tabla) · fecha_alta vacía": 28
+  }
+}
+(gpad-mlops-template) PS C:\cursos\srt-v2-gjj>
+```
 ### Juan Manuel Adarve Cifuentes
 * Aprobación de PRs #30, #31 y #32
 * Se prueba promover la v1 como @champion
