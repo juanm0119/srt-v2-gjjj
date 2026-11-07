@@ -5,36 +5,48 @@ stages:
     deps:
     - path: contracts/churn_contract.py
       hash: md5
-      md5: 503892e9a37499d026c9e41232334aa2
-      size: 1712
-    - path: data/raw/churn.csv
+      md5: c2bab9f1227f6e350100b8039e1fdc74
+      size: 2453
+    - path: contracts/crm_warnings.py
       hash: md5
-      md5: 407a20b3020208962aadddb8292b31a0
-      size: 423142
+      md5: 69bf4b6e8a9e6518906f2a95197a9f01
+      size: 1154
+    - path: data/processed/clean.csv
+      hash: md5
+      md5: 7760f3516fbc41b1192a4ce829514afa
+      size: 416017
+    - path: data/raw/crm_extracto.csv
+      hash: md5
+      md5: 502f66160bf7276c80a616f00c9ee73a
+      size: 657318
+    - path: reports/cleaning.json
+      hash: md5
+      md5: 04267535a291a806232f88fba5701006
+      size: 1021
     - path: src/validate.py
       hash: md5
-      md5: 8605b827d076c6cc81022850724d4b53
-      size: 1441
+      md5: 821988deff402c4d4816a766341ef1f2
+      size: 2421
     outs:
     - path: reports/validation.json
       hash: md5
-      md5: 447321795b9608a8e5839911518c668d
-      size: 63
+      md5: eb541b06559b6d010d0228388af1244a
+      size: 165
   prepare:
     cmd: python -m src.prepare
     deps:
-    - path: data/raw/churn.csv
+    - path: data/processed/clean.csv
       hash: md5
-      md5: 407a20b3020208962aadddb8292b31a0
-      size: 423142
+      md5: 7760f3516fbc41b1192a4ce829514afa
+      size: 416017
     - path: reports/validation.json
       hash: md5
-      md5: 447321795b9608a8e5839911518c668d
-      size: 63
+      md5: eb541b06559b6d010d0228388af1244a
+      size: 165
     - path: src/prepare.py
       hash: md5
-      md5: 742fc4d20b2be0db6bff480902c89ea7
-      size: 998
+      md5: 0b5adafd0c60179d4ed66080bd6c57fe
+      size: 1002
     params:
       params.yaml:
         split:
@@ -43,19 +55,19 @@ stages:
     outs:
     - path: data/processed/test.csv
       hash: md5
-      md5: 30d6a60da8fec30c4b0dd80f6ada7ebb
-      size: 84632
+      md5: cf9354002560fde6b80326c6e6d52c82
+      size: 83302
     - path: data/processed/train.csv
       hash: md5
-      md5: f24c4cc517419616f559028d0f63110c
-      size: 338636
+      md5: dbf6f1c8177597a547ce68bf569abc20
+      size: 332841
   train:
     cmd: python -m src.train
     deps:
     - path: data/processed/train.csv
       hash: md5
-      md5: f24c4cc517419616f559028d0f63110c
-      size: 338636
+      md5: dbf6f1c8177597a547ce68bf569abc20
+      size: 332841
     - path: src/features.py
       hash: md5
       md5: 476c7d59117f00a37527a1bf084cfe9e
@@ -86,26 +98,26 @@ stages:
     outs:
     - path: models/model.joblib
       hash: md5
-      md5: 17e6a5f3efeaf916638716b18cbb4b38
+      md5: ea4c7011146c737fc22543dac732ba78
       size: 4257
     - path: models/model_meta.json
       hash: md5
-      md5: eb81d3788569e9b9fabac2b433928908
+      md5: 6e4a434a5d32f1c05d6e7704b64aba9e
       size: 288
   evaluate:
     cmd: python -m src.evaluate
     deps:
     - path: data/processed/test.csv
       hash: md5
-      md5: 30d6a60da8fec30c4b0dd80f6ada7ebb
-      size: 84632
+      md5: cf9354002560fde6b80326c6e6d52c82
+      size: 83302
     - path: models/model.joblib
       hash: md5
-      md5: 17e6a5f3efeaf916638716b18cbb4b38
+      md5: ea4c7011146c737fc22543dac732ba78
       size: 4257
     - path: models/model_meta.json
       hash: md5
-      md5: eb81d3788569e9b9fabac2b433928908
+      md5: 6e4a434a5d32f1c05d6e7704b64aba9e
       size: 288
     - path: src/evaluate.py
       hash: md5
@@ -123,13 +135,37 @@ stages:
     outs:
     - path: metrics.json
       hash: md5
-      md5: f21bf96167822dd0069c38f0648edc53
-      size: 344
+      md5: 56470bb7d9fe651b2a798f3ea52e87e9
+      size: 343
     - path: reports/confusion_matrix.png
       hash: md5
-      md5: 58b7cd53c07e179d647ffe6dcbd369cd
-      size: 24350
+      md5: 5b426b203d033e8abe0a6488da0193ae
+      size: 23115
     - path: reports/roc_curve.csv
       hash: md5
-      md5: 62827253c1828e45ba1623a48590bbbf
-      size: 15318
+      md5: 52ea0a16666bdf5e90e02882a66ff543
+      size: 16060
+  clean:
+    cmd: python -m src.clean
+    deps:
+    - path: data/raw/crm_extracto.csv
+      hash: md5
+      md5: 502f66160bf7276c80a616f00c9ee73a
+      size: 657318
+    - path: src/clean.py
+      hash: md5
+      md5: 1164af92a0cab754e6f95a443513b2fb
+      size: 5792
+    - path: src/common.py
+      hash: md5
+      md5: 51922eb7829c29f083785b99c5efe921
+      size: 1702
+    outs:
+    - path: data/processed/clean.csv
+      hash: md5
+      md5: 7760f3516fbc41b1192a4ce829514afa
+      size: 416017
+    - path: reports/cleaning.json
+      hash: md5
+      md5: 04267535a291a806232f88fba5701006
+      size: 1021
