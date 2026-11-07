@@ -51,10 +51,24 @@ Los tratamientos los decide el dueño del dato (A en la RACI para el contrato de
 | 2026-11-06 | Remoto de datos       | Carpeta en google drive                                                                               |
 | 2026-11-06 | Reinicio de mlflow.db | Se reinicio antes del baseline, porque el champion anterior se entrenó con datos sintéticos (Reto 00) |
 
-| Corrida (run_id)                 | Modelo              | roc_auc | recall | precision | recall_gap_senior_citizen | customers_contacted | net_savings_vs_random | ¿Pasa el gate? |
-|----------------------------------|---------------------|--------:|-------:|----------:|--------------------------:|--------------------:|----------------------:|----------------|
-| e5c21dd8e19e44519e014f60c8a9c37f | Random Forest       |  0.8221 | 0.6764 |    0.5592 |                     0.034 |                 456 |              14652.59 | Cumple      |
-| d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |     0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
-| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | No cumple         |
+### Recomendación de modelo (Política V2)
 
-De acuerdo gate en base a la politica de V2, se recomienda el modelo de Random Forest, aunque Champion es Regresión Logísticael 
+| Corrida (run_id)                 | Modelo              | roc_auc | recall | precision | recall_gap_senior_citizen | customers_contacted | net_savings_vs_random | ¿Pasa el gate? |
+|----------------------------------|---------------------|--------:|-------:|----------:|--------------------------:|--------------------:|----------------------:|:--------------:|
+| e5c21dd8e19e44519e014f60c8a9c37f | **Random Forest**   |  0.8221 | 0.6764 |    0.5592 | **0.034**                 |                 456 |              14652.59 | **Cumple**     |
+| d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |    0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
+| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | No cumple      |
+
+**Champion actual:** Regresión Logística  
+**Modelo recomendado según política V2:** **Random Forest**
+
+#### Justificación
+
+- Aunque la Regresión Logística tiene el mejor `roc_auc` (0.8325), **no cumple el criterio de equidad** (`recall_gap_senior_citizen` = 0.116 > 0.10).
+- Gradient Boosting tampoco cumple el umbral de equidad (0.1186).
+- **Random Forest** es el único modelo que cumple simultáneamente:
+  - Las métricas técnicas mínimas del gate
+  - El criterio de equidad (`recall_gap` = 0.034, muy por debajo del máximo permitido de 0.10)
+  - Un nivel de ahorro (`net_savings_vs_random`) competitivo
+
+Por lo tanto, de acuerdo con la **política de calidad V2** (que prioriza equidad junto con las métricas de performance), se recomienda promover **Random Forest** como nuevo champion, aunque su `roc_auc` sea ligeramente inferior.

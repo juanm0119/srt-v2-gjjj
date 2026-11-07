@@ -9,6 +9,49 @@ roc_auc 0,8325 · recall_at_eval 0,756 · precision_at_eval 0,5268 · ahorro net
 __brecha de recall senior_citizen 0,116 (límite V2 ≤ 0,10)__
 * Aprobación de PR #33
 * PS-1
+**Base:** `main` con el tag `baseline`
+
+#### Alteración aplicada
+
+Se alteró el extracto: **5 filas** con `payment_method = "billetera_digital"`, un valor fuera del dominio.
+
+#### Resultado de `dvc repro`
+
+| Etapa | Estado |
+|---|---|
+| `clean` | Ejecutada (7042 → 6886 filas) |
+| `validate` | **Falló** por la regla bloqueante RC-2 |
+| `prepare` | No se ejecutó |
+| `train` | No se ejecutó |
+| `evaluate` | No se ejecutó |
+
+- **Regla violada:** RC-2 (`payment_method` fuera del dominio), en 5 filas.
+- **Mensaje:** `❌ el contrato v2 falló: no se entrena`
+- **Código de salida:** 255 (el pipeline terminó con error).
+
+#### Reporte generado
+
+`reports/validation.json` quedó con:
+
+- `"valid": false`
+- 1 bloqueante (5 filas)
+- 2 advertencias (20 y 28 filas)
+
+> El reporte solo contiene conteos, sin identificadores.
+
+#### Restauración
+
+Pasos ejecutados, en este orden:
+
+1. `git restore` del puntero `.dvc`.
+2. `dvc checkout --force` del extracto.
+3. `dvc repro`: `validate` dio `✅ contrato v2 OK` y las demás etapas quedaron sin cambios.
+
+#### Verificación final
+
+- `git diff` del puntero: vacío.
+- `git status`: vacío.
+* PS-5
 ```terminaloutput
 (gpad-mlops-template) PS C:\cursos\srt-v2-gjj> Select-String -Path src/prepare.py -Pattern "RAW_DATA"
 (gpad-mlops-template) PS C:\cursos\srt-v2-gjj> uv run python -m src.clean
@@ -29,6 +72,31 @@ código: 0
 }
 (gpad-mlops-template) PS C:\cursos\srt-v2-gjj>
 ```
+* Paso 6 · Declarar las etapas nuevas en `dvc.yaml`
+
+Se reemplazaron las etapas `validate` y `prepare` por tres:
+
+| Etapa | Entradas / dependencias | Salidas / notas |
+|---|---|---|
+| `clean` | Lee el extracto | Produce `clean.csv` y `reports/cleaning.json` (este último con `cache: false`) |
+| `validate` | `clean.csv`, el extracto, `cleaning.json`, los dos contratos y `src/validate.py` | Produce `validation.json` |
+| `prepare` | Lee `clean.csv` y depende de `validation.json` | No corre si `validate` falla |
+
+- `train` y `evaluate` no cambiaron.
+
+#### Verificación del DAG
+
+`dvc dag` mostró:
+
+```
+crm_extracto.csv.dvc → clean → validate → prepare → train → evaluate
+```
+
+Sin la etapa `ingest`.
+
+#### Commit
+- **Hash:** `686a6b9`
+- Los 5 archivos se agregaron por nombre.
 ### Juan Manuel Adarve Cifuentes
 * Aprobación de PRs #30, #31 y #32
 * Se prueba promover la v1 como @champion
@@ -65,10 +133,10 @@ uv run dvc exp show --only-changed --md
 uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5050
 ```
 | Corrida (run_id)                 | Modelo              | roc_auc | recall | precision | recall_gap_senior_citizen | customers_contacted | net_savings_vs_random | ¿Pasa el gate? |
-|----------------------------------|---------------------|--------:|-------:|----------:|--------------------------:|--------------------:|----------------------:|----------------|
-| e5c21dd8e19e44519e014f60c8a9c37f | Random Forest       |  0.8221 | 0.6764 |    0.5592 |                     0.034 |                 456 |              14652.59 | No cumple      |
-| d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |     0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
-| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | Cumple         |
+|----------------------------------|---------------------|--------:|-------:|----------:|--------------------------:|--------------------:|----------------------:|:--------------:|
+| e5c21dd8e19e44519e014f60c8a9c37f | **Random Forest**   |  0.8221 | 0.6764 |    0.5592 | **0.034**                 |                 456 |              14652.59 | **Cumple**     |
+| d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |    0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
+| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | No cumple      |
 ## Noviembre 7 del 2026
 ### Gloria Abimeleth Ardila
 * Actualizado los datos de gobernanza en `datos_gobernanza.md`
