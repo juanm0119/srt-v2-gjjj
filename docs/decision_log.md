@@ -47,28 +47,28 @@ Los tratamientos los decide el dueño del dato (A en la RACI para el contrato de
 
 ## Reto 03 · Remoto de datos, Reinicio del mlflow.db y promoción del baseline
 | Fecha      | Decisión              | Justificación                                                                                         |
-|------------|-----------------------|-------------------------------------------------------------------------------------------------------|
-| 2026-11-06 | Remoto de datos       | Carpeta en google drive                                                                               |
+|------------|-----------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2026-11-06 | Remoto de datos en Google Drive      | Es gratis e inmediata y no deja el extracto con datos personales en un servicio de terceros con credenciales                                                                               |
 | 2026-11-06 | Reinicio de mlflow.db | Se reinicio antes del baseline, porque el champion anterior se entrenó con datos sintéticos (Reto 00) |
+| 2026-11-06 | *Promoción del baseline:* la Regresión Logística v1 pasa a @champion. | Pasó el gate: roc_auc 0,8325 ≥ 0,75; recall_at_eval 0,756 ≥ 0,70; precision_at_eval 0,5268 ≥ 0,45; sin champion previo. Aprobó Juan (A en la RACI) y ejecutó Leighton. Evidencia: PR #32 y tag baseline. |
 
 ### Recomendación de modelo (Política V2)
 
 | Corrida (run_id)                 | Modelo              | roc_auc | recall | precision | recall_gap_senior_citizen | customers_contacted | net_savings_vs_random | ¿Pasa el gate? |
 |----------------------------------|---------------------|--------:|-------:|----------:|--------------------------:|--------------------:|----------------------:|:--------------:|
-| e5c21dd8e19e44519e014f60c8a9c37f | **Random Forest**   |  0.8221 | 0.6764 |    0.5592 | **0.034**                 |                 456 |              14652.59 | **Cumple**     |
-| d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |    0.575 |                    0.1186 |                 440 |              14920.05 | No cumple      |
-| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | No cumple      |
+| e5c21dd8e19e44519e014f60c8a9c37f | **Random Forest**   |  0.8221 | 0.6764 |    0.5592 | **0.034**                 |                 456 |              14652.59 | **Si**     |
+| d8a14e612e0c4266b55a8fd1cb6fc6d3 | Gradient Boosting   |  0.8295 | 0.6711 |    0.575 |                    0.1186 |                 440 |              14920.05 | Si      |
+| d517cab9a3ee4a2a83cedf963ffd00ae | Regresión Logística |  0.8325 | 0.6897 |    0.5628 |                     0.116 |                 462 |              15030.42 | Si      |
 
-**Champion actual:** Regresión Logística  
-**Modelo recomendado según política V2:** **Random Forest**
+Según la guía, el gate compara roc_auc, recall_at_eval y precision_at_eval con gate.* de params.yaml: los tres modelos pasan. La equidad se revisa aparte, con recall_gap_senior_citizen frente al máximo de V2 (≤ 0,10): solo Random Forest cumple (0,034).
+*Champion actual:* Regresión Logística v1 (baseline).
+*Modelo recomendado:* Random Forest.
 
 #### Justificación
 
-- Aunque la Regresión Logística tiene el mejor `roc_auc` (0.8325), **no cumple el criterio de equidad** (`recall_gap_senior_citizen` = 0.116 > 0.10).
-- Gradient Boosting tampoco cumple el umbral de equidad (0.1186).
-- **Random Forest** es el único modelo que cumple simultáneamente:
-  - Las métricas técnicas mínimas del gate
-  - El criterio de equidad (`recall_gap` = 0.034, muy por debajo del máximo permitido de 0.10)
-  - Un nivel de ahorro (`net_savings_vs_random`) competitivo
+- *Equidad (política de V2, brecha ≤ 0,10):* solo Random Forest cumple (0,034). La Regresión Logística (0,116) y Gradient Boosting (0,1186) la superan.
+- *Desempeño:* Random Forest pierde 0,0104 de roc_auc frente al baseline (0,8221 frente a 0,8325) y pasa los tres mínimos del gate.
+- *Ahorro con los supuestos de V2:* 14 652,59 frente a 15 030,42 del baseline (−2,5 %). Contacta 456 clientes en el conjunto de prueba, frente a 462.
+- *Explicabilidad:* la Regresión Logística es más fácil de explicar, pero no cumple la equidad; por eso no es la recomendada.
 
-Por lo tanto, de acuerdo con la **política de calidad V2** (que prioriza equidad junto con las métricas de performance), se recomienda promover **Random Forest** como nuevo champion, aunque su `roc_auc` sea ligeramente inferior.
+*Limitación:* si se intenta promover Random Forest, el gate lo rechaza por la regla de no regresión: cae 0,0104 en roc_auc y el máximo tolerado (max_drop_vs_champion) es 0,01. Los umbrales del gate no se modifican en este reto. La Regresión Logística sigue como champion y Random Forest queda como recomendación.
