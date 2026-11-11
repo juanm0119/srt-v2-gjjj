@@ -72,3 +72,10 @@ Según la guía, el gate compara roc_auc, recall_at_eval y precision_at_eval con
 - *Explicabilidad:* la Regresión Logística es más fácil de explicar, pero no cumple la equidad; por eso no es la recomendada.
 
 *Limitación:* si se intenta promover Random Forest, el gate lo rechaza por la regla de no regresión: cae 0,0104 en roc_auc y el máximo tolerado (max_drop_vs_champion) es 0,01. Los umbrales del gate no se modifican en este reto. La Regresión Logística sigue como champion y Random Forest queda como recomendación.
+
+
+## Reto 04 · Decisión técnica sobre privacidad de datos en CI
+
+| Fecha | Decisión | Alternativas consideradas | Justificación | Responsable | Evidencia |
+|---|---|---|---|---|---|
+| 2026-11-11 | **Propuesta pendiente de aprobación:** ejecutar las pruebas funcionales y de contrato de la CI con datos sintéticos controlados. Para las pruebas de métricas predictivas, utilizar datos de evaluación representativos y autorizados, con acceso restringido y sin publicar información personal en GitHub. | Base completa del CRM; muestra anonimizada de datos reales; datos exclusivamente sintéticos. | Los datos sintéticos permiten verificar RC-2, RC-3 y los escenarios funcionales de HU-07 sin exponer datos personales. Sin embargo, no sustituyen la evaluación estadística sobre datos representativos. Se deben separar ambos tipos de pruebas y proteger el acceso, los artefactos y los registros de ejecución. | Gloria, Data Steward (propone); Líder/PO y dueño del dato (aprobación pendiente). | `tests/test_contract.py`; pruebas HU-03 y HU-07; [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39); configuración de CI pendiente de verificación. |
