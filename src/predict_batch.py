@@ -43,9 +43,11 @@ def score(batch: pd.DataFrame, model, meta: dict) -> pd.DataFrame:
 
 def prioritize(scored: pd.DataFrame, capacity: int) -> pd.DataFrame:
     """HU-08: clientes en riesgo, en orden descendente, como máximo `capacity`, con prioridad 1..n."""
-    # TODO (Reto 04): implementar con la capacidad de la variante (`business.weekly_capacity`).
-    # La lista lleva SOLO lo que el agente necesita: prioridad, customer_id, probabilidad y versión.
-    raise NotImplementedError("Reto 04: lista del lunes con la capacidad de la variante")
+    en_riesgo = scored[scored["churn_pred"] == 1]  # 1. filtrar: probabilidad >= umbral del modelo
+    ordenados = en_riesgo.sort_values("churn_probability", ascending=False, kind="stable")  # 2. ordenar
+    lista = ordenados.head(capacity).reset_index(drop=True)  # 3. recortar a la capacidad
+    lista.insert(0, "prioridad", range(1, len(lista) + 1))
+    return lista[["prioridad", ID_COL, "churn_probability", "model_version"]]  # 4. minimizar
 
 
 def main(argv=None) -> int:
