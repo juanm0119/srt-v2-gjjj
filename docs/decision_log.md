@@ -79,3 +79,20 @@ Según la guía, el gate compara roc_auc, recall_at_eval y precision_at_eval con
 | Fecha | Decisión | Alternativas consideradas | Justificación | Responsable | Evidencia |
 |---|---|---|---|---|---|
 | 2026-11-11 | **Propuesta pendiente de aprobación:** ejecutar las pruebas funcionales y de contrato de la CI con datos sintéticos controlados. Para las pruebas de métricas predictivas, utilizar datos de evaluación representativos y autorizados, con acceso restringido y sin publicar información personal en GitHub. | Base completa del CRM; muestra anonimizada de datos reales; datos exclusivamente sintéticos. | Los datos sintéticos permiten verificar RC-2, RC-3 y los escenarios funcionales de HU-07 sin exponer datos personales. Sin embargo, no sustituyen la evaluación estadística sobre datos representativos. Se deben separar ambos tipos de pruebas y proteger el acceso, los artefactos y los registros de ejecución. | Gloria, Data Steward (propone); Líder/PO y dueño del dato (aprobación pendiente). | `tests/test_contract.py`; pruebas HU-03 y HU-07; [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39); configuración de CI pendiente de verificación. |
+
+
+## Reto 04 · Registro del rechazo del contrato relajado RC-3 (PS-1)
+
+**Fecha:** 2026-11-11
+
+**Decisión técnica:** Rechazar la modificación experimental de RC-3 que aumentaba de 60 a 100 el cargo mensual máximo permitido para clientes sin internet. Se conserva el límite original de 60.
+
+**Alternativas consideradas:** Mantener el límite original de 60; ampliar el límite hasta 100; solicitar una revisión formal al dueño del dato.
+
+**Justificación:** El contrato relajado permitió aceptar registros que debían ser rechazados. La integración continua detectó el incumplimiento mediante tres pruebas fallidas relacionadas con RC-3. El PR #39 se cerró sin fusionarse a `main`.
+
+**Responsables:** Gloria Ardila, Data Steward, ejecutó y documentó la prueba PS-1. El dueño del dato conserva la autoridad para aprobar modificaciones del contrato.
+
+**Evidencias:** [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39), commit `a8423cf`, tres pruebas fallidas de RC-3 y verificación del límite original de 60 en `main`.
+
+**Estado:** Rechazo técnico demostrado y PR cerrado sin fusionar. No se atribuye una aprobación formal al dueño del dato.
