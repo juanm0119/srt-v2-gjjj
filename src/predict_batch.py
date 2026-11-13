@@ -50,6 +50,19 @@ def prioritize(scored: pd.DataFrame, capacity: int) -> pd.DataFrame:
     return lista[["prioridad", ID_COL, "churn_probability", "model_version"]]  # 4. minimizar
 
 
+def reglas_violadas(err: pandera.errors.SchemaErrors) -> dict[str, int]:
+    """{regla: filas afectadas}, sin valores ni identificadores de las filas (contrato §7.4)."""
+    fc = err.failure_cases
+    de_tabla = fc["schema_context"] == "DataFrameSchema"  # reglas entre columnas o de toda la tabla
+    columna = fc["column"].astype(str).where(~de_tabla, "(tabla)")
+    falta = fc["check"] == "column_in_dataframe"  # columna ausente: failure_case es su NOMBRE
+    columna = columna.where(~falta, fc["failure_case"].astype(str))
+    regla = columna + " · " + fc["check"].astype(str)
+    return {
+        r: int(g["index"].nunique()) if g["index"].notna().any() else len(g) for r, g in fc.groupby(regla)
+    }
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Inferencia batch del lunes")
     parser.add_argument("batch", type=Path)
@@ -61,11 +74,20 @@ def main(argv=None) -> int:
     try:
         features_schema.validate(batch, lazy=True)
     except pandera.errors.SchemaErrors as err:
-        # TODO (Reto 04): dejar registro del rechazo en <out-dir>/rejected/<lote>.json con el nivel
-        # CRÍTICO-CONTRATO y las reglas violadas (sin customer_id), sin escribir predicciones.
+        registro = {
+            "nivel": "CRÍTICO-CONTRATO",
+            "lote": args.batch.name,
+            "fecha": datetime.now(UTC).isoformat(timespec="seconds"),
+            "filas_del_lote": len(batch),
+            "reglas_violadas": reglas_violadas(err),
+        }
+        rechazos = args.out_dir / "rejected"
+        rechazos.mkdir(parents=True, exist_ok=True)
+        destino = rechazos / f"{args.batch.stem}.json"
+        destino.write_text(json.dumps(registro, indent=2, ensure_ascii=False))
         print(
             f"[predict] 🛑 CRÍTICO-CONTRATO: el lote viola el contrato "
-            f"({len(err.failure_cases)} fallas): no se predice"
+            f"({len(err.failure_cases)} fallas): no se predice → {os.path.relpath(destino)}"
         )
         return 2
 
