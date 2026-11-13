@@ -26,7 +26,7 @@ import pandas as pd
 import pandera.errors
 
 from contracts.churn_contract import features_schema
-from src.common import FEATURES, ID_COL, MODEL_META, MODEL_PATH, REPORTS_DIR
+from src.common import FEATURES, ID_COL, MODEL_META, MODEL_PATH, REPORTS_DIR, load_params
 
 
 def score(batch: pd.DataFrame, model, meta: dict) -> pd.DataFrame:
@@ -54,6 +54,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Inferencia batch del lunes")
     parser.add_argument("batch", type=Path)
     parser.add_argument("--out-dir", type=Path, default=REPORTS_DIR)
+    parser.add_argument("--capacity", type=int, default=None, help="por defecto, business.weekly_capacity")
     args = parser.parse_args(argv)
 
     batch = pd.read_csv(args.batch)
@@ -74,10 +75,14 @@ def main(argv=None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     columnas = [ID_COL, "churn_probability", "churn_pred", "model_version", "scored_at"]
     scored[columnas].to_csv(out / f"{args.batch.stem}_scored.csv", index=False)
-    # TODO (Reto 04): generar <out-dir>/predictions/<lote>_lista.csv con prioritize() y la capacidad.
+    capacidad = args.capacity
+    if capacidad is None:  # sin --capacity: la capacidad semanal de la variante
+        capacidad = load_params()["business"]["weekly_capacity"]
+    lista = prioritize(scored, capacidad)
+    lista.to_csv(out / f"{args.batch.stem}_lista.csv", index=False)
     print(
         f"[predict] {len(scored)} clientes · {int(scored['churn_pred'].sum())} en riesgo · "
-        f"modelo v{meta['model_version']} → {os.path.relpath(out / (args.batch.stem + '_scored.csv'))}"
+        f"lista {len(lista)}/{capacidad} · modelo v{meta['model_version']} → {os.path.relpath(out)}"
     )
     return 0
 
