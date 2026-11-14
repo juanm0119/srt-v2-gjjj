@@ -78,17 +78,33 @@ Según la guía, el gate compara roc_auc, recall_at_eval y precision_at_eval con
 
 | Fecha | Decisión | Alternativas consideradas | Justificación | Responsable | Evidencia |
 |---|---|---|---|---|---|
-| 2026-11-11 | **Propuesta aprobada por el líder del equipo; pendiente de validación del PO académico:** ejecutar las pruebas funcionales y de contrato de la CI con datos sintéticos controlados. Para las pruebas de métricas predictivas, utilizar datos de evaluación representativos y autorizados, con acceso restringido y sin publicar información personal en GitHub. | Base completa del CRM; muestra anonimizada de datos reales; datos exclusivamente sintéticos. | Los datos sintéticos permiten verificar RC-2, RC-3 y los escenarios funcionales de HU-07 sin exponer datos personales. Sin embargo, no sustituyen la evaluación estadística sobre datos representativos. Se deben separar ambos tipos de pruebas y proteger el acceso, los artefactos y los registros de ejecución. | Gloria Ardila, Data Steward (proponente); Juan Manuel Adarve, líder principal (aprobación interna); profesor Christian, PO académico (validación pendiente).| `tests/test_contract.py`; pruebas HU-03 y HU-07; [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39); configuración de CI pendiente de verificación. |
+| **Propuesta aprobada el 2026-11-14 por Juan Manuel Adarve (líder) y el profesor Christian Candela (PO académico y dueño del dato), con condiciones de implementación:** ejecutar las pruebas funcionales y de contrato de la CI con datos sintéticos controlados. Para las pruebas de métricas predictivas, utilizar datos de evaluación representativos y autorizados, con acceso restringido y sin publicar información personal en GitHub. | Base completa del CRM; muestra anonimizada de datos reales; datos exclusivamente sintéticos. | Los datos sintéticos permiten verificar RC-2, RC-3 y los escenarios funcionales de HU-07 sin exponer datos personales. Sin embargo, no sustituyen la evaluación estadística sobre datos representativos. Se deben separar ambos tipos de pruebas y proteger el acceso, los artefactos y los registros de ejecución. | Gloria Ardila, Data Steward (proponente); Juan Manuel Adarve, líder principal (aprobación interna); profesor Christian Candela, PO académico y dueño del dato (aprobación formal el 2026-11-14).| `tests/test_contract.py`; pruebas HU-03 y HU-07; [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39); configuración de CI pendiente de verificación. |
+
 
 **Actualización de estado — 2026-11-14**
 
-La propuesta de privacidad de datos en integración continua (CI), formulada por Gloria Ardila como Data Steward, recibió la aprobación interna de Juan Manuel Adarve, líder principal del equipo GJJJ.
+La propuesta de privacidad de datos en integración continua (CI), formulada por Gloria Ardila como Data Steward, recibió la aprobación interna de Juan Manuel Adarve, líder principal del equipo GJJJ, y la aprobación formal del profesor Christian Andrés Candela Uribe, en su calidad de PO académico y dueño del dato.
 
-Se acuerda separar las pruebas funcionales y de contrato, ejecutadas con datos sintéticos controlados, de las evaluaciones de métricas predictivas, realizadas con datos representativos y autorizados, bajo restricciones de acceso y protección de información personal.
+**Estado: APROBADA CON CONDICIONES DE IMPLEMENTACIÓN.**
 
-**Estado:** Aprobación interna del líder registrada. Pendiente validación del profesor Christian como PO académico y verificación de implementación de los controles de privacidad.
+**Condiciones de aprobación:**
 
-**Evidencia:** Confirmación de aprobación de Juan Manuel Adarve, por adjuntar o referenciar en el registro del proyecto.
+1. Ejecutar en CI las pruebas de contrato, comportamiento y pipeline con datos sintéticos.
+2. Realizar las evaluaciones con datos reales fuera de la CI, en el equipo del MLOps Engineer.
+3. Ejecutar el Quality Gate localmente contra `@champion` antes de cualquier promoción del modelo.
+4. Conservar `reports/gate.json` como evidencia de la evaluación, protegiendo cualquier contenido sensible.
+5. No incorporar el extracto real a GitHub, ni al repositorio, secretos, registros o artefactos de CI.
+6. Registrar los riesgos de privacidad aceptados y las medidas de mitigación.
+
+**Riesgo aceptado:** la evaluación con datos reales fuera de CI requiere controles adicionales de acceso, custodia y protección de los resultados para evitar divulgaciones no autorizadas.
+
+**Mitigación:** restringir los datos reales al entorno autorizado de evaluación local, evitar imprimir identificadores en registros, revisar los artefactos antes de compartirlos y publicar únicamente evidencia que no exponga información personal.
+
+**Responsables de la decisión:** Líder / PO.
+
+**Evidencia de aprobación:** correo del profesor Christian del 2026-11-14.
+
+**Seguimiento:** aprobación formal concluida; implementación y verificación técnica de los controles sujeta a comprobación.
 
 ## Reto 04 · Registro del rechazo del contrato relajado RC-3 (PS-1)
 
@@ -146,4 +162,4 @@ Se acuerda separar las pruebas funcionales y de contrato, ejecutadas con datos s
 
 **Estado:** Retroalimentación docente recibida; implementación técnica y verificación de evidencias pendientes de confirmación.
 
-**Nota:** La aprobación docente aquí registrada corresponde a los ajustes de umbral, equidad y evidencias de recall. No constituye aprobación explícita de la propuesta independiente de privacidad de datos en CI, cuyo estado se conserva pendiente de aprobación formal.
+**Nota:** La retroalimentación docente sobre los umbrales, equidad y evidencias de recall corresponde a una decisión técnica independiente de la propuesta de privacidad de datos en CI. Esta última recibió aprobación formal el 2026-11-14 por parte del profesor Christian Andrés Candela Uribe, en calidad de PO académico y dueño del dato, con condiciones específicas de implementación documentadas en el apartado de privacidad. Su aprobación se encuentra concluida; la ejecución y verificación de los controles técnicos se gestionan por separado.
