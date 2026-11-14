@@ -78,8 +78,17 @@ Según la guía, el gate compara roc_auc, recall_at_eval y precision_at_eval con
 
 | Fecha | Decisión | Alternativas consideradas | Justificación | Responsable | Evidencia |
 |---|---|---|---|---|---|
-| 2026-11-11 | **Propuesta pendiente de aprobación:** ejecutar las pruebas funcionales y de contrato de la CI con datos sintéticos controlados. Para las pruebas de métricas predictivas, utilizar datos de evaluación representativos y autorizados, con acceso restringido y sin publicar información personal en GitHub. | Base completa del CRM; muestra anonimizada de datos reales; datos exclusivamente sintéticos. | Los datos sintéticos permiten verificar RC-2, RC-3 y los escenarios funcionales de HU-07 sin exponer datos personales. Sin embargo, no sustituyen la evaluación estadística sobre datos representativos. Se deben separar ambos tipos de pruebas y proteger el acceso, los artefactos y los registros de ejecución. | Gloria, Data Steward (propone); Líder/PO y dueño del dato (aprobación pendiente). | `tests/test_contract.py`; pruebas HU-03 y HU-07; [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39); configuración de CI pendiente de verificación. |
+| 2026-11-11 | **Propuesta aprobada por el líder del equipo; pendiente de validación del PO académico:** ejecutar las pruebas funcionales y de contrato de la CI con datos sintéticos controlados. Para las pruebas de métricas predictivas, utilizar datos de evaluación representativos y autorizados, con acceso restringido y sin publicar información personal en GitHub. | Base completa del CRM; muestra anonimizada de datos reales; datos exclusivamente sintéticos. | Los datos sintéticos permiten verificar RC-2, RC-3 y los escenarios funcionales de HU-07 sin exponer datos personales. Sin embargo, no sustituyen la evaluación estadística sobre datos representativos. Se deben separar ambos tipos de pruebas y proteger el acceso, los artefactos y los registros de ejecución. | Gloria Ardila, Data Steward (proponente); Juan Manuel Adarve, líder principal (aprobación interna); profesor Christian, PO académico (validación pendiente).| `tests/test_contract.py`; pruebas HU-03 y HU-07; [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39); configuración de CI pendiente de verificación. |
 
+**Actualización de estado — 2026-11-14**
+
+La propuesta de privacidad de datos en integración continua (CI), formulada por Gloria Ardila como Data Steward, recibió la aprobación interna de Juan Manuel Adarve, líder principal del equipo GJJJ.
+
+Se acuerda separar las pruebas funcionales y de contrato, ejecutadas con datos sintéticos controlados, de las evaluaciones de métricas predictivas, realizadas con datos representativos y autorizados, bajo restricciones de acceso y protección de información personal.
+
+**Estado:** Aprobación interna del líder registrada. Pendiente validación del profesor Christian como PO académico y verificación de implementación de los controles de privacidad.
+
+**Evidencia:** Confirmación de aprobación de Juan Manuel Adarve, por adjuntar o referenciar en el registro del proyecto.
 
 ## Reto 04 · Registro del rechazo del contrato relajado RC-3 (PS-1)
 
@@ -96,3 +105,45 @@ Según la guía, el gate compara roc_auc, recall_at_eval y precision_at_eval con
 **Evidencias:** [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39), commit `a8423cf`, tres pruebas fallidas de RC-3 y verificación del límite original de 60 en `main`.
 
 **Estado:** Rechazo técnico demostrado y PR cerrado sin fusionar. No se atribuye una aprobación formal al dueño del dato.
+
+
+
+## Reto 04 · Decisiones derivadas de la retroalimentación docente
+
+**Fecha:** 2026-11-14
+
+**Origen:** Respuesta del profesor Christian a la propuesta del equipo GJJJ.
+
+### 1. Ajuste del criterio de no regresión
+
+**Decisión:** Adoptar `max_drop_vs_champion: 0.035`, en lugar de ratificar el valor `0.01` propuesto inicialmente. El valor `0.03` observado en la configuración también deberá ajustarse a `0.035`.
+
+**Justificación:** Con el extracto de V2, pequeñas variaciones en la semilla de partición pueden modificar el ROC-AUC en aproximadamente 0.03. El profesor señaló que una caída de 0.01 puede llevar a rechazar reentrenamientos legítimos por ruido. Se conserva la evaluación de no regresión, con una tolerancia de 0.035.
+
+**Responsables de formalización:** Líder y PO.
+
+**Implementación:** Pendiente de verificar en `params.yaml` y mediante Pull Request.
+
+### 2. Equidad del modelo
+
+**Decisión:** Adoptar la opción 2: evaluación independiente con escalamiento obligatorio.
+
+**Justificación:** El incumplimiento actual de equidad, `recall_gap_senior_citizen = 0.116`, supera el límite de `0.10`.
+
+**Seguimiento:** Registrar el riesgo en `docs/riesgos.md` y resolverlo en el Reto 06. Esta decisión no equivale a declarar cumplido el criterio de equidad.
+
+### 3. Evidencia del criterio min_recall
+
+**Decisión:** Conservar evidencia del comportamiento del criterio `min_recall` ante las semillas 42, 7, 123 y 2031.
+
+**Justificación:** Según la retroalimentación del profesor, el umbral de `0.70` rechaza un reentrenamiento legítimo y el escenario 2 obtiene `0.6953` en CI.
+
+**Seguimiento:** Incorporar las evidencias reproducibles, identificando los resultados de cada escenario, sin modificar el umbral sin autorización expresa.
+
+### 4. Formalización y control de cambios
+
+**Decisión:** Registrar las decisiones con responsables Líder/PO y aplicar los ajustes técnicos mediante Pull Request.
+
+**Estado:** Retroalimentación docente recibida; implementación técnica y verificación de evidencias pendientes de confirmación.
+
+**Nota:** La aprobación docente aquí registrada corresponde a los ajustes de umbral, equidad y evidencias de recall. No constituye aprobación explícita de la propuesta independiente de privacidad de datos en CI, cuyo estado se conserva pendiente de aprobación formal.
