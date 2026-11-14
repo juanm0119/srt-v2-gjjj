@@ -22,3 +22,4 @@ reports/gate.json
 # Salidas de la inferencia batch (Reto 04)
 reports/predictions/
 reports/rejected/
+data/raw/churn.csv

@@ -98,11 +98,11 @@ stages:
     outs:
     - path: models/model.joblib
       hash: md5
-      md5: ea4c7011146c737fc22543dac732ba78
+      md5: fef72ae0fe22a026f0d220f95bd91407
       size: 4257
     - path: models/model_meta.json
       hash: md5
-      md5: 6e4a434a5d32f1c05d6e7704b64aba9e
+      md5: 4059fbb09c5f8ba31d0bd7f021b9ac79
       size: 288
   evaluate:
     cmd: python -m src.evaluate
@@ -113,11 +113,11 @@ stages:
       size: 83302
     - path: models/model.joblib
       hash: md5
-      md5: ea4c7011146c737fc22543dac732ba78
+      md5: fef72ae0fe22a026f0d220f95bd91407
       size: 4257
     - path: models/model_meta.json
       hash: md5
-      md5: 6e4a434a5d32f1c05d6e7704b64aba9e
+      md5: 4059fbb09c5f8ba31d0bd7f021b9ac79
       size: 288
     - path: src/evaluate.py
       hash: md5
