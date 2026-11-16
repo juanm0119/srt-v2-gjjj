@@ -68,6 +68,20 @@ Pruebas fallidas:
 En los tres casos se registró el mensaje `Failed: DID NOT RAISE SchemaErrors`, confirmando que la implementación
 modificada aceptaba registros que debían rechazarse.
 
+
+**Evidencia complementaria de CI — PS-1 (16/11/2026)**
+
+- **Pull Request:** [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39), cerrado sin fusionar.
+- **Ejecución de GitHub Actions:** #83.
+- **Paso que presentó el fallo:** ejecución de las pruebas automatizadas del contrato en `tests/test_contract.py`.
+- **Pruebas fallidas:** `test_rc3_sin_internet_con_cargo_alto_se_rechaza[training]`, `test_rc3_sin_internet_con_cargo_alto_se_rechaza[features]` y `test_hu03_sin_internet_con_cargo_de_fibra_falla_rc3`.
+- **Causa:** las pruebas esperaban la excepción `SchemaErrors`, pero el contrato relajado aceptó los registros (`DID NOT RAISE SchemaErrors`).
+- **Resultado:** 3 pruebas fallidas, 23 aprobadas y 12 deseleccionadas; código de salida 1.
+- **Duración de las pruebas:** 5,72 segundos.
+- **Duración total reportada de la ejecución CI #83:** 29 segundos. No equivale necesariamente al tiempo exacto hasta la detección del incumplimiento.
+
+**Conclusión:** la CI detectó el incumplimiento deliberado de RC-3 y el PR #39 se cerró sin fusionarse, conservando el límite original de `monthly_charges <= 60` para clientes sin internet.
+
 ##### Resultado y decisión
 
 La CI quedó en rojo por el incumplimiento deliberado de RC-3. El PR #39 se cerró sin fusionarse, conservando la
@@ -152,7 +166,26 @@ incorporando consideraciones de privacidad en el aseguramiento de calidad.
 |-----------------|--------------------------------------------------------------------------------------------|
 | **Responsable** | Gloria Ardila — Data Steward, equipo GJJJ                                                  |
 | **Entregables** | PS-1 documentada (PR #39) y propuesta técnica de privacidad integrada (PR #40)             |
-| **Pendiente**   | Validación formal de la propuesta de privacidad por los responsables del contrato de datos |
+|  **Estado** | Aprobada formalmente el 2026-11-14 por el profesor Christian, PO académico, con condiciones de implementación. |
+
+
+##### Aprobación formal y cierre de la propuesta — 14/11/2026
+
+La propuesta formulada por Gloria Ardila, Data Steward, recibió aprobación interna de Juan Manuel Adarve, líder principal del equipo GJJJ, y aprobación formal del profesor Christian, PO académico, el 14 de noviembre de 2026.
+
+**Condiciones aprobadas:**
+
+1. Ejecutar en CI exclusivamente pruebas de contrato, comportamiento y pipeline con datos sintéticos controlados.
+2. Realizar la evaluación de métricas sobre datos reales autorizados fuera de CI, en el equipo del MLOps Engineer.
+3. Ejecutar localmente el Quality Gate contra `@champion` antes de cualquier promoción del modelo.
+4. Conservar `reports/gate.json` como evidencia de la evaluación, evitando exponer información sensible.
+5. Mantener el extracto real fuera de GitHub, incluidos secretos, registros y artefactos de CI.
+
+**Gestión de riesgos:** se actualizaron R-03 (evaluación representativa), R-05 (equidad) y R-09 (privacidad), documentados en `docs/riesgos.md` mediante el PR #47.
+
+**Trazabilidad:** propuesta inicial PR #40; decisiones de cierre PR #44; aprobación formal y riesgos PR #47.
+
+**Estado de la decisión:** aprobada. La implementación de los controles técnicos y la mitigación de los riesgos continúan sujetas a verificación por los responsables correspondientes.
 
 ---
 
