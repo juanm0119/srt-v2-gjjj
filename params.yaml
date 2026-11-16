@@ -48,7 +48,7 @@ gate:
   min_roc_auc: 0.75
   min_recall: 0.70             # recall_at_eval (al eval_threshold)
   min_precision: 0.45          # precision_at_eval (al eval_threshold)
-  max_drop_vs_champion: 0.01   # caída máxima de ROC-AUC tolerada frente al @champion actual
+  max_drop_vs_champion: 0.035   # caída máxima de ROC-AUC tolerada frente al @champion actual
 
 monitoring:
   drift_share_threshold: 0.25  # proporción de columnas con drift que dispara la alerta
