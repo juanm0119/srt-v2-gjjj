@@ -127,7 +127,7 @@ La propuesta de privacidad de datos en integración continua (CI), formulada por
 ## Reto 04 · Decisiones derivadas de la retroalimentación docente
 
 **Fecha:** 2026-11-09
-Se agrega bypass para que integraciones con la rama principal exigan un PR y aprobación
+Se agrega ruleset para que integraciones con la rama principal exigan un PR y aprobación
 
 **Fecha:** 2026-11-14
 
