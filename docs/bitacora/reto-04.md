@@ -135,7 +135,7 @@ la representatividad necesaria para evaluar el desempeño estadístico.
 - GitHub Actions ejecutó satisfactoriamente las dos verificaciones:
     - CI / Imagen Docker y prueba de humo.
     - CI / Pruebas, pipeline y quality gate.
-- El PR recibió la aprobación de Juan Manuel (Líder/PO) y fue fusionado a `main`.
+- El PR recibió la aprobación de Juan Manuel (Líder) y fue fusionado a `main`.
 - La rama principal se actualizó en el entorno local, quedando sincronizada con `origin/main` en el commit `f916611`.
 
 ##### Resultado y decisión
@@ -680,4 +680,4 @@ código: 1
 
 ## Lunes 16 de noviembre
 ### Juan Manuel Adarve — Lider
-* PR #46 (escenario 2, modelo regularizado): cerrado sin fusionar; la CI lo rechazó en el paso Quality gate, como se esperaba.
+* PR #46 (escenario 2, modelo regularizado): cerrado sin fusionar; la CI lo rechazó en el paso Quality gate, como se esperaba.
