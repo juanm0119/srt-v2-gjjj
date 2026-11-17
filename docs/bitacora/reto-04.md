@@ -4,7 +4,7 @@
 
 ### Equipo
 
-- Aprobación de los PR #38, #39 y #40.
+- Aprobación de los PR #38 y #40. El PR #39 (escenario 1, contrato relajado) se cerró sin fusionar.
 
 ### Jorge Eliecer Leighton Romero — MLOps Engineer
 
@@ -189,7 +189,7 @@ La propuesta formulada por Gloria Ardila, Data Steward, recibió aprobación int
 
 ---
 
-### Jorge Sanchez — MLOps Engineer
+### Jorge Andrés Sánchez — Data Scientist
 
 #### 1. Métricas del Champion
 
@@ -466,7 +466,7 @@ Las tres pruebas del batch quedaron en la tabla de trazabilidad (bloque 1, paso 
 * Aprobación de PRs #42, #43, #44 y #45 y #47
 ### Gloria Abbymeleth Ardila — Data Steward
 * Aprobación y registro en **datos_gobernanda.md** privacidad en integración continua (CI). PR #44
-### Jorge Andres Sánchez — MLOps Engineer
+### Jorge Andrés Sánchez — Data Scientist
 * Ajustes de valores de métricas y reejecución de metricas, pruebas y validaciones
 **Comando:** `uv run ruff check`
 **Resultado:** ✅ Todas las verificaciones pasaron.
@@ -510,6 +510,14 @@ metrics.json  recall_at_eval             0.756     0.6897       -0.0663
 metrics.json  recall_gap_senior_citizen  0.116     0.0709       -0.0451
 metrics.json  roc_auc                    0.8325    0.8087       -0.0238
 ```
+
+#### Escenario 2 · Un modelo "igual de bueno" según el AUC (PS-2)
+
+- **Cambio:** rama `exp/regularizacion-fuerte`, commit `a298069`, con `model.logistic_regression.C` de 1.0 a **0.0005** en `params.yaml`.
+- **Resultado local con datos reales** (`dvc metrics diff main`, arriba): `roc_auc` baja solo 0,0238 (de 0,8325 a 0,8087), pero `recall_at_eval` cae a **0,6897**, por debajo de `gate.min_recall = 0,70`, y `recall` a 0,4324. El modelo deja de encontrar desertores aunque el AUC parezca similar.
+- **PR #46** hacia `main`: la CI (ejecución #93) **falló en el paso Quality gate**; **tiempo hasta detectar: 44 s**. En la CI corre el extracto sintético (sin acceso al remoto), donde el profesor reporta `recall_at_eval = 0,6953`, también por debajo de 0,70.
+- **Decisión:** no fusionar. El modelo regularizado no entró a `main` (`C` sigue en 1.0) y la rama se eliminó.
+- **Lección:** con `git add -A` se incluyó en el commit del experimento el CSV sintético `data/raw/churn.csv`, que quedaba sin ignorar desde que se retiró la etapa `ingest` en el Reto 03. No contiene datos personales y no llegó a `main`; el PR #45 lo agregó a `.gitignore`.
 
 ## Lunes 16 de noviembre
 ### Jorge Eliecer Leighton Romero — MLOps Engineer
@@ -614,4 +622,4 @@ Responde a la decisión 3 de la retroalimentación docente (`docs/decision_log.m
 
 ## Lunes 16 de noviembre
 ### Juan Manuel Adarve — Lider
-* aprobación del PR #46
+* PR #46 (escenario 2, modelo regularizado): no se fusionó a `main`; la CI lo rechazó en el paso Quality gate, como se esperaba.
