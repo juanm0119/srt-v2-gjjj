@@ -234,6 +234,314 @@ gate:
 
 `eval_threshold = 0.30`: umbral fijo con el que se comparan todas las versiones.
 
+## Lunes 9 de noviembre
+### Jorge Eliecer Leighton Romero — MLOps Engineer (R del Reto 04)
+**Rama:** `feat/pruebas-aceptacion`
+
+##### Paso 1 · Partir de `main` en verde
+- `git switch main` y `git pull`: `main` quedó en `280ec32` (cierre del Reto 03, tag `r03`).
+- `uv sync --frozen`: 207 paquetes.
+- `dvc pull`: "Everything is up to date."
+- `dvc repro`: "Data and pipelines are up to date.", sin re-ejecutar ninguna etapa.
+- `uv run pytest`: **36 passed**, sin failed ni skipped (incluye las pruebas del modelo).
+- CI en GitHub: la última ejecución sobre `main` (#80, commit `280ec32`) pasó, con los dos jobs en verde:
+  - Pruebas, pipeline y quality gate.
+  - Imagen Docker y prueba de humo.
+
+**Incidente:** Windows bloqueó el `python.exe` del entorno (os error 4551, Control de aplicaciones de Windows). Se resolvió borrando `.venv` y recreándolo con `uv sync --frozen`. Después, `uv run python --version` dio Python 3.12.15.
+
+##### Paso 2 · Crear la rama de trabajo
+- `git switch -c feat/pruebas-aceptacion`.
+- Desde este reto, ningún cambio entra a `main` sin PR.
+
+## Lunes 9 y martes 10 de noviembre
+### Jorge Eliecer Leighton Romero — MLOps Engineer (R del Reto 04)
+
+##### Paso 3 · HU-03: pruebas que nombran la regla
+
+Se agregaron al final de `tests/test_contract.py` (líneas 74 a 93):
+
+| Prueba | Escenario de HU-03 | Qué verifica |
+|---|---|---|
+| `test_hu03_categoria_fuera_del_dominio_falla_rc2` | Lote con `contract_type = "Month-to-month"` | Que la falla sea exactamente de RC-2 (regla `isin` sobre `contract_type`), con `features_schema` |
+| `test_hu03_sin_internet_con_cargo_de_fibra_falla_rc3` | Cliente con `internet_service = "none"` y `monthly_charges = 90` | Que en las fallas aparezca "RC-3", con `training_schema` |
+
+Las dos pruebas verifican la regla que falla, no solo que "algo falle". Si desaparece la regla, la prueba se pone en rojo aunque falle otra.
+
+**Verificación 1: las pruebas pasan**
+
+```text
+uv run pytest tests/test_contract.py -v -k hu03
+test_hu03_categoria_fuera_del_dominio_falla_rc2 PASSED
+test_hu03_sin_internet_con_cargo_de_fibra_falla_rc3 PASSED
+2 passed, 14 deselected
+```
+
+**Verificación 2: la prueba puede fallar**
+
+Se cambió temporalmente RC-3 de `<= 60` a `<= 100` en `contracts/churn_contract.py` (línea 31):
+
+```text
+test_hu03_categoria_fuera_del_dominio_falla_rc2 PASSED
+test_hu03_sin_internet_con_cargo_de_fibra_falla_rc3 FAILED
+Failed: DID NOT RAISE SchemaErrors
+1 failed, 1 passed, 14 deselected
+```
+
+Con el contrato relajado, el cliente sin internet con cargo de 90 ya no se detecta y la prueba lo señala, lo que demuestra que no es decorativa. Después se restauró el contrato con `git restore contracts/churn_contract.py`, por lo que el contrato no se modificó.
+
+##### Prueba de umbrales del gate (sin fecha en el original)
+
+`test_metrics_meet_minimum_thresholds` **falló** con:
+
+```text
+recall_at_eval=0.756 < gate.min_recall=0.99
+```
+
+Las otras 4 pruebas siguieron en PASSED.
+
 ## Jueves 12 de noviembre
 ### Juan Manuel Adarve — Lider
 * Registro de bítacora
+
+## Viernes 13 de noviembre
+### Jorge Eliecer Leighton Romero — MLOps Engineer
+
+**Rama:** `feat/inferencia-batch`
+
+##### Paso 1 · Rama y lectura de la base
+- `git switch main` y `git pull`: `main` quedó en `f916611` (merge del PR #40).
+- `git switch -c feat/inferencia-batch`.
+- `Select-String -Path src/predict_batch.py -Pattern "TODO"`: 3 pendientes, en `prioritize` (línea 46), en el registro del rechazo (línea 61) y en la lista del lunes (línea 75).
+- `git check-ignore -v`: `reports/predictions/` y `reports/rejected/` están ignoradas (`.gitignore`, líneas 23 y 24), así que las salidas del batch nunca llegan a GitHub.
+- Lote de prueba: `make_production_batch --scenario normal` → 1500 filas.
+- La base actual da:
+
+```text
+[predict] 1500 clientes · 478 en riesgo · modelo v1 → reports\predictions\batch_normal_scored.csv
+```
+
+- `git status --short` salió vacío.
+
+##### Paso 2 · La capacidad: `prioritize` (commit `d9490bd`)
+
+En `src/predict_batch.py`, `prioritize` (HU-08) hace cuatro cosas:
+
+1. Filtra los clientes en riesgo (`churn_pred == 1`).
+2. Los ordena de mayor a menor probabilidad.
+3. Recorta a la capacidad.
+4. Devuelve solo 4 columnas: `prioridad`, `customer_id`, `churn_probability` y `model_version` (minimización, Ley 1581).
+
+##### Paso 3 · La lista del lunes y `--capacity` (commit `5739720`)
+
+El script escribe `reports/predictions/<lote>_lista.csv` con la capacidad de V2 (`business.weekly_capacity = 900`). El argumento `--capacity` permite cambiarla en las pruebas.
+
+```text
+uv run python -m src.predict_batch data/production/batch_normal.csv
+[predict] 1500 clientes · 478 en riesgo · lista 478/900 · modelo v1
+
+uv run python -m src.predict_batch data/production/batch_normal.csv --capacity 250
+[predict] 1500 clientes · 478 en riesgo · lista 250/250 · modelo v1
+```
+
+- Con capacidad de 900 entran los 478 en riesgo.
+- Con 250 se recorta la lista, no el riesgo: siguen siendo 478 en riesgo y los 228 restantes no caben esta semana.
+- La lista tiene encabezado `prioridad,customer_id,churn_probability,model_version` y probabilidades descendentes (0,9426 → 0,913 → 0,91 en las 3 primeras filas).
+
+##### Paso 4 · El registro del rechazo (commit `b115747`)
+
+- Nueva función `reglas_violadas`: resume las fallas por regla, solo con conteos y sin valores ni identificadores (contrato §7.4).
+- Si el lote viola el contrato, el script escribe `reports/rejected/<lote>.json` con el nivel `CRÍTICO-CONTRATO`, no escribe predicciones y termina con código 2.
+- **Ajuste frente a la guía:** la línea del `return` de `reglas_violadas` se partió en 3 para cumplir el límite de 110 caracteres de ruff. El comportamiento es el mismo.
+
+**Verificación con el lote `esquema`:**
+
+```text
+uv run python -m src.predict_batch data/production/batch_esquema.csv; echo "código: $LASTEXITCODE"
+[predict] 🛑 CRÍTICO-CONTRATO: el lote viola el contrato (227 fallas): no se predice → reports\rejected\batch_esquema.json
+código: 2
+```
+
+```json
+{
+  "nivel": "CRÍTICO-CONTRATO",
+  "lote": "batch_esquema.csv",
+  "fecha": "2026-11-13T20:18:34+00:00",
+  "filas_del_lote": 1500,
+  "reglas_violadas": {
+    "(tabla) · RC-3: sin internet con cargo mayor a 60": 1,
+    "internet_service · isin(['dsl', 'fiber', 'none'])": 225,
+    "monthly_charges · column_in_dataframe": 1
+  }
+}
+```
+
+El registro no contiene ningún `customer_id`.
+
+##### Paso 5 · Las pruebas del batch (commit `7b22e09`)
+
+Archivo nuevo `tests/test_predict_batch.py`, con el marcador `model` y una carpeta temporal (`tmp_path`) para no tocar `reports/`:
+
+| Prueba | Qué verifica |
+|---|---|
+| `test_hu08_lista_respeta_capacidad_orden_y_version` | Con capacidad 50: exactamente 50, orden descendente y con versión |
+| `test_hu08_cada_fila_de_la_lista_indica_la_version` | El script completo escribe la lista con solo las 4 columnas y versión en cada fila |
+| `test_hu03_lote_invalido_no_genera_predicciones` | Con `"Month-to-month"`: código 2, ningún archivo de predicciones y registro sin el `customer_id` |
+
+Las pruebas pasan: **3 passed**.
+
+**La prueba de orden puede fallar.** Con `ascending=True` temporalmente en `prioritize`:
+
+```text
+test_hu08_lista_respeta_capacidad_orden_y_version FAILED
+assert lista["churn_probability"].is_monotonic_decreasing  → assert False
+1 failed, 2 passed
+```
+
+Se restauró con `git restore src/predict_batch.py` y volvió a dar 3 passed.
+
+##### Paso 6 · PR, revisión y merge
+- Antes del PR:
+  - `uv run ruff check .` → "All checks passed!"
+  - `uv run pytest` → **41 passed**
+  - `git status --short` vacío, sin ningún `.csv` ni `.json` de `reports/`.
+- PR #(número) de `feat/inferencia-batch` a `main`, con 2 archivos: `src/predict_batch.py` y `tests/test_predict_batch.py`.
+
+##### Filas nuevas para la tabla de trazabilidad
+
+| HU · escenario | Archivo · prueba | Marcador | ¿Pasa? |
+|---|---|---|:---:|
+| HU-03 · … y no se genera `reports/predictions/` | `tests/test_predict_batch.py::test_hu03_lote_invalido_no_genera_predicciones` | `model` | ✅ PASSED |
+| HU-08 · la lista respeta la capacidad | `tests/test_predict_batch.py::test_hu08_lista_respeta_capacidad_orden_y_version` | `model` | ✅ PASSED |
+| HU-08 · versión en cada fila | `tests/test_predict_batch.py::test_hu08_cada_fila_de_la_lista_indica_la_version` | `model` | ✅ PASSED |
+
+### Juan Manuel Adarve — Lider
+* Se envia propuesta de metricas del modelo a PO
+* PO aprueba propuesta con modificaciones. max_drop_vs_champion = 0.035 teniendo en cuenta que con el extracto de V2 solo cambiar la semilla de partición mueve el ROC-AUC más de 0.03. Con 0.01, casi cualquier reentrenamiento legítimo sería rechazado por ruido; su ejemplo del Random Forest, rechazado por 0.0004, lo muestra. El escenario 2 lo sigue deteniendo min_recall.
+
+## Sábado 14 de noviembre
+### Juan Manuel Adarve — Lider
+* Aprobación de PRs #42, #43, #44 y #45, #46, #47
+### Gloria Abbymeleth Ardila — Data Steward
+* Aprobación y registro en **datos_gobernanda.md** privacidad en integración continua (CI). PR #44
+### Jorge Andres Sánchez — MLOps Engineer
+* Ajustes de valores de métricas y reejecución de metricas, pruebas y validaciones
+**Comando:** `uv run ruff check`
+**Resultado:** ✅ Todas las verificaciones pasaron.
+
+```terminaloutput
+All checks passed!
+```
+
+```terminaloutput
+PS C:\Andres\Maestria\Gerencia_Proyectos\Proyecto\srt-jjjg> uv run pytest
+=========================================================== test session starts ===========================================================
+platform win32 -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Andres\Maestria\Gerencia_Proyectos\Proyecto\srt-jjjg
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1, Faker-40.43.0, hydra-core-1.3.7, platformdirs-4.13.0, typeguard-4.6.0
+collected 38 items
+
+tests\test_api.py .....                                                                                                             [ 13%]
+tests\test_contract.py ................                                                                                             [ 55%]
+tests\test_llm_assistant.py ........                                                                                                [ 76%]
+tests\test_model_behavior.py .....                                                                                                  [ 89%]
+tests\test_pipeline.py ....                                                                                                         [100%]
+
+============================================================ 38 passed in 7.40s ============================================================
+```
+
+```terminaloutput
+PS C:\Andres\Maestria\Gerencia_Proyectos\Proyecto\srt-jjjg> uv run dvc metrics diff main
+Path          Metric                     main      workspace    Change
+metrics.json  customers_contacted        462       252          -210
+metrics.json  f1                         0.6198    0.5183       -0.1015
+metrics.json  net_savings_model          20010.0   13297.5      -6712.5
+metrics.json  net_savings_random         4979.58   2716.13      -2263.45
+metrics.json  net_savings_vs_random      15030.42  10581.37     -4449.05
+metrics.json  pr_auc                     0.6389    0.6106       -0.0283
+metrics.json  precision                  0.5628    0.6468       0.084
+metrics.json  precision_at_eval          0.5268    0.5253       -0.0015
+metrics.json  recall                     0.6897    0.4324       -0.2573
+metrics.json  recall_at_eval             0.756     0.6897       -0.0663
+metrics.json  recall_gap_senior_citizen  0.116     0.0709       -0.0451
+metrics.json  roc_auc                    0.8325    0.8087       -0.0238
+```
+
+## Lunes 16 de noviembre## Lunes 16 de noviembre
+### Jorge Eliecer Leighton Romero — MLOps Engineer
+#### Paso 2: Verificación del gate negociado contra el `@champion`
+
+**Dónde:** computador del MLOps, contra el `@champion` local (condiciones 2 a 4 de la decisión de privacidad) · **Base:** `main` (`a2e0566`, después del merge del PR #45)
+
+- **Cambio aplicado por el PR #45:** `max_drop_vs_champion` de 0.01 a 0.035, por decisión del profesor.
+- **Valores que se mantienen:** `eval_threshold` 0.30, `min_roc_auc` 0.75, `min_recall` 0.70 y `min_precision` 0.45.
+- No fue necesario re-ejecutar el pipeline: `evaluate` solo depende de `gate.eval_threshold`, que no cambió.
+
+```text
+uv run python -m scripts.quality_gate; echo "código: $LASTEXITCODE"
+  ✅ roc_auc >= 0.75  (valor: 0.8325)
+  ✅ recall_at_eval >= 0.7 (umbral 0.3)  (valor: 0.756)
+  ✅ precision_at_eval >= 0.45 (umbral 0.3)  (valor: 0.5268)
+  ✅ roc_auc >= champion v1 (0.8325) - 0.035  (valor: 0.8325)
+[gate] ✅ challenger v1 aprobado
+código: 0
+```
+
+- `reports/gate.json`: `challenger_version: "1"`, `"passed": true`, con las 4 reglas en `true`. Se conserva localmente como evidencia y no se sube a Git.
+- **Resultado:** el modelo vigente pasa el gate acordado. Con la nueva tolerancia, el mínimo admisible de `roc_auc` frente al champion es 0,7975, lo que cubre la variación por semilla observada (la semilla 2031 dio 0,8007).
+
+---
+
+#### PS-4 · La lista del lunes respeta la capacidad
+
+**Base:** `main` (`ec15534`, después del merge del PR #42)
+
+```text
+uv run python -m monitoring.make_production_batch --scenario normal
+[batch] 1500 filas, escenario 'normal' → data\production\batch_normal.csv
+
+uv run python -m src.predict_batch data/production/batch_normal.csv --capacity 250
+[predict] 1500 clientes · 478 en riesgo · lista 250/250 · modelo v1 → reports\predictions
+```
+
+- Se recorta la lista, no el riesgo: siguen 478 clientes en riesgo y solo 250 caben en la capacidad indicada. Con la capacidad de V2 (900), la lista tiene los 478.
+- La lista tiene solo 4 columnas (`prioridad,customer_id,churn_probability,model_version`).
+- Las probabilidades van de mayor a menor (0,9426 → 0,913 → 0,91) y cada fila indica `model_version = 1`.
+
+---
+
+#### PS-5 · Un lote inválido no produce predicciones
+
+**Base:** `main` (`ec15534`)
+
+```text
+uv run python -m monitoring.make_production_batch --scenario esquema
+[batch] 1500 filas, escenario 'esquema' → data\production\batch_esquema.csv
+
+uv run python -m src.predict_batch data/production/batch_esquema.csv; echo "código: $LASTEXITCODE"
+[predict] 🛑 CRÍTICO-CONTRATO: el lote viola el contrato (227 fallas): no se predice → reports\rejected\batch_esquema.json
+código: 2
+```
+
+Predicciones de `batch_esquema` en `reports/predictions`: sin predicciones para `batch_esquema` ✅
+
+```json
+{
+  "nivel": "CRÍTICO-CONTRATO",
+  "lote": "batch_esquema.csv",
+  "fecha": "2026-11-16T19:22:17+00:00",
+  "filas_del_lote": 1500,
+  "reglas_violadas": {
+    "(tabla) · RC-3: sin internet con cargo mayor a 60": 1,
+    "internet_service · isin(['dsl', 'fiber', 'none'])": 225,
+    "monthly_charges · column_in_dataframe": 1
+  }
+}
+```
+
+El lote se rechazó antes de puntuar: código 2, ninguna predicción escrita, y el registro para el dueño del dato tiene solo conteos por regla, sin ningún `customer_id`.
+
+### Juan Manuel Adarve — Lider
+* aprobación del PR #48
