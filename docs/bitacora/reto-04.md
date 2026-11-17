@@ -421,7 +421,7 @@ Se restauró con `git restore src/predict_batch.py` y volvió a dar 3 passed.
 
 ## Sábado 14 de noviembre
 ### Juan Manuel Adarve — Lider
-* Aprobación de PRs #42, #43, #44 y #45, #46, #47
+* Aprobación de PRs #42, #43, #44 y #45 y #47
 ### Gloria Abbymeleth Ardila — Data Steward
 * Aprobación y registro en **datos_gobernanda.md** privacidad en integración continua (CI). PR #44
 ### Jorge Andres Sánchez — MLOps Engineer
@@ -545,3 +545,7 @@ El lote se rechazó antes de puntuar: código 2, ninguna predicción escrita, y 
 
 ### Juan Manuel Adarve — Lider
 * aprobación del PR #48
+
+## Lunes 16 de noviembre
+### Juan Manuel Adarve — Lider
+* aprobación del PR #46
