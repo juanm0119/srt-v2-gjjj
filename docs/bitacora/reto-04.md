@@ -516,7 +516,7 @@ metrics.json  roc_auc                    0.8325    0.8087       -0.0238
 - **Cambio:** rama `exp/regularizacion-fuerte`, commit `a298069`, con `model.logistic_regression.C` de 1.0 a **0.0005** en `params.yaml`.
 - **Resultado local con datos reales** (`dvc metrics diff main`, arriba): `roc_auc` baja solo 0,0238 (de 0,8325 a 0,8087), pero `recall_at_eval` cae a **0,6897**, por debajo de `gate.min_recall = 0,70`, y `recall` a 0,4324. El modelo deja de encontrar desertores aunque el AUC parezca similar.
 - **PR #46** hacia `main`: la CI (ejecución #93) **falló en el paso Quality gate**; **tiempo hasta detectar: 44 s**. En la CI corre el extracto sintético (sin acceso al remoto), donde el profesor reporta `recall_at_eval = 0,6953`, también por debajo de 0,70.
-- **Decisión:** no fusionar. El modelo regularizado no entró a `main` (`C` sigue en 1.0) y la rama se eliminó.
+- **Decisión:** PR #46 cerrado sin fusionar (17 de noviembre). El modelo regularizado no entró a `main` (`C` sigue en 1.0) y la rama se eliminó.
 - **Lección:** con `git add -A` se incluyó en el commit del experimento el CSV sintético `data/raw/churn.csv`, que quedaba sin ignorar desde que se retiró la etapa `ingest` en el Reto 03. No contiene datos personales y no llegó a `main`; el PR #45 lo agregó a `.gitignore`.
 
 ## Lunes 16 de noviembre
@@ -676,8 +676,8 @@ código: 1
 | Escenario | Enlace al PR | Paso que falló | Tiempo hasta detectar | Decisión |
 |---|---|---|---|---|
 | 1 · contrato relajado (RC-3 de 60 a 100) | [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39) | Pruebas unitarias y de contrato de datos (3 pruebas de RC-3 fallidas) | 29 s (duración de la ejecución #83) | Cerrado sin fusionar |
-| 2 · modelo regularizado (C = 0.0005) | [PR #46](https://github.com/juanm0119/srt-v2-gjjj/pull/46) | Quality gate (`recall_at_eval` bajo `gate.min_recall`) | 44 s (duración de la ejecución #93) | No fusionado |
+| 2 · modelo regularizado (C = 0.0005) | [PR #46](https://github.com/juanm0119/srt-v2-gjjj/pull/46) | Quality gate (`recall_at_eval` bajo `gate.min_recall`) | 44 s (duración de la ejecución #93) | Cerrado sin fusionar |
 
 ## Lunes 16 de noviembre
 ### Juan Manuel Adarve — Lider
-* PR #46 (escenario 2, modelo regularizado): no se fusionó a `main`; la CI lo rechazó en el paso Quality gate, como se esperaba.
+* PR #46 (escenario 2, modelo regularizado): cerrado sin fusionar; la CI lo rechazó en el paso Quality gate, como se esperaba.
