@@ -6,9 +6,9 @@
 
 - Aprobación de los PR #38, #39 y #40.
 
-### Jorge Leigthon
+### Jorge Eliecer Leighton Romero — MLOps Engineer
 
-- Bloque 1 del Reto 04 terminado, indicado en el PR #38.
+- Bloque 1 del Reto 04 terminado: pruebas de HU-03 y HU-07 (detalle en las secciones del 9 y 10 de noviembre). Se integró a `main` con el PR #38 (Approve de Juan, CI en verde).
 
 ---
 
@@ -290,15 +290,62 @@ Failed: DID NOT RAISE SchemaErrors
 
 Con el contrato relajado, el cliente sin internet con cargo de 90 ya no se detecta y la prueba lo señala, lo que demuestra que no es decorativa. Después se restauró el contrato con `git restore contracts/churn_contract.py`, por lo que el contrato no se modificó.
 
-##### Prueba de umbrales del gate (sin fecha en el original)
+Commit `b03ea0c`.
 
-`test_metrics_meet_minimum_thresholds` **falló** con:
+##### Paso 4 · HU-07: escenarios citados y umbrales leídos de `params.yaml`
+
+Cambios en `tests/test_model_behavior.py`:
+
+- `test_direction_contract` y `test_direction_support_tickets` citan ahora su escenario de HU-07 en el docstring; el cuerpo de las pruebas no cambió.
+- `test_metrics_meet_minimum_thresholds` verifica las **tres** métricas del gate (`roc_auc`, `recall_at_eval` y `precision_at_eval`) contra `gate.*` de `params.yaml`, los mismos valores que aplica `scripts/quality_gate.py`. Antes solo verificaba `roc_auc`.
+
+**Verificación 1: las pruebas pasan**
 
 ```text
-recall_at_eval=0.756 < gate.min_recall=0.99
+uv run pytest tests/test_model_behavior.py -v
+test_probabilities_are_valid PASSED
+test_direction_contract PASSED
+test_direction_support_tickets PASSED
+test_invariance_to_customer_id PASSED
+test_metrics_meet_minimum_thresholds PASSED
+5 passed
 ```
 
-Las otras 4 pruebas siguieron en PASSED.
+**Verificación 2: la prueba de umbrales puede fallar**
+
+Se cambió temporalmente `gate.min_recall` a 0.99 en `params.yaml` (línea 49):
+
+```text
+test_metrics_meet_minimum_thresholds FAILED
+AssertionError: recall_at_eval=0.756 < gate.min_recall=0.99
+1 failed, 4 passed
+```
+
+La prueba lee los valores del gate desde `params.yaml`: cuando el gate cambie, la prueba usará los mismos valores sin que nadie la toque. Se restauró con `git restore params.yaml`. Commit `bc84be4`.
+
+##### Paso 5 · Tabla de trazabilidad
+
+Incluye las pruebas del bloque 3 (inferencia batch, 13 de noviembre).
+
+| HU · escenario | Archivo · prueba | Marcador | ¿Pasa? |
+|---|---|---|:---:|
+| HU-03 · categoría fuera del dominio (RC-2) | `tests/test_contract.py::test_hu03_categoria_fuera_del_dominio_falla_rc2` | — | ✅ PASSED |
+| HU-03 · … y no se genera `reports/predictions/` | `tests/test_predict_batch.py::test_hu03_lote_invalido_no_genera_predicciones` | `model` | ✅ PASSED |
+| HU-03 · sin internet con cargo de fibra (RC-3) | `tests/test_contract.py::test_hu03_sin_internet_con_cargo_de_fibra_falla_rc3` | — | ✅ PASSED |
+| HU-07 · direccionalidad del contrato | `tests/test_model_behavior.py::test_direction_contract` | `model` | ✅ PASSED |
+| HU-07 · direccionalidad de los tickets | `tests/test_model_behavior.py::test_direction_support_tickets` | `model` | ✅ PASSED |
+| HU-07 · invariancia al identificador | `tests/test_model_behavior.py::test_invariance_to_customer_id` | `model` | ✅ PASSED |
+| HU-07 · umbrales mínimos | `tests/test_model_behavior.py::test_metrics_meet_minimum_thresholds` | `model` | ✅ PASSED |
+| HU-08 · la lista respeta la capacidad | `tests/test_predict_batch.py::test_hu08_lista_respeta_capacidad_orden_y_version` | `model` | ✅ PASSED |
+| HU-08 · versión en cada fila | `tests/test_predict_batch.py::test_hu08_cada_fila_de_la_lista_indica_la_version` | `model` | ✅ PASSED |
+
+Todas corren en la CI: las de contrato en el paso de pruebas unitarias y las de marcador `model` después de `dvc repro`.
+
+##### Paso 6 · PR, revisión y merge
+
+- PR #38 de `feat/pruebas-aceptacion` a `main`, con 2 archivos: `tests/test_contract.py` y `tests/test_model_behavior.py`.
+- CI del PR en verde (2 checks), Approve de Juan y merge `55f9175` (11 de noviembre).
+- Al abrir el PR, GitHub mostró *"Merging is blocked: at least 1 approving review is required"*: la protección de `main` ya estaba activa.
 
 ## Jueves 12 de noviembre
 ### Juan Manuel Adarve — Lider
@@ -405,15 +452,10 @@ Se restauró con `git restore src/predict_batch.py` y volvió a dar 3 passed.
   - `uv run ruff check .` → "All checks passed!"
   - `uv run pytest` → **41 passed**
   - `git status --short` vacío, sin ningún `.csv` ni `.json` de `reports/`.
-- PR #(número) de `feat/inferencia-batch` a `main`, con 2 archivos: `src/predict_batch.py` y `tests/test_predict_batch.py`.
+- PR #42 de `feat/inferencia-batch` a `main`, con 2 archivos: `src/predict_batch.py` y `tests/test_predict_batch.py`.
+- CI del PR en verde (2 checks), Approve de Juan y merge `ec15534` (16 de noviembre).
 
-##### Filas nuevas para la tabla de trazabilidad
-
-| HU · escenario | Archivo · prueba | Marcador | ¿Pasa? |
-|---|---|---|:---:|
-| HU-03 · … y no se genera `reports/predictions/` | `tests/test_predict_batch.py::test_hu03_lote_invalido_no_genera_predicciones` | `model` | ✅ PASSED |
-| HU-08 · la lista respeta la capacidad | `tests/test_predict_batch.py::test_hu08_lista_respeta_capacidad_orden_y_version` | `model` | ✅ PASSED |
-| HU-08 · versión en cada fila | `tests/test_predict_batch.py::test_hu08_cada_fila_de_la_lista_indica_la_version` | `model` | ✅ PASSED |
+Las tres pruebas del batch quedaron en la tabla de trazabilidad (bloque 1, paso 5).
 
 ### Juan Manuel Adarve — Lider
 * Se envia propuesta de metricas del modelo a PO
@@ -469,9 +511,9 @@ metrics.json  recall_gap_senior_citizen  0.116     0.0709       -0.0451
 metrics.json  roc_auc                    0.8325    0.8087       -0.0238
 ```
 
-## Lunes 16 de noviembre## Lunes 16 de noviembre
+## Lunes 16 de noviembre
 ### Jorge Eliecer Leighton Romero — MLOps Engineer
-#### Paso 2: Verificación del gate negociado contra el `@champion`
+#### Verificación del gate negociado contra el `@champion` (bloque 2, paso 2)
 
 **Dónde:** computador del MLOps, contra el `@champion` local (condiciones 2 a 4 de la decisión de privacidad) · **Base:** `main` (`a2e0566`, después del merge del PR #45)
 
@@ -543,9 +585,33 @@ Predicciones de `batch_esquema` en `reports/predictions`: sin predicciones para 
 
 El lote se rechazó antes de puntuar: código 2, ninguna predicción escrita, y el registro para el dueño del dato tiene solo conteos por regla, sin ningún `customer_id`.
 
+---
+
+#### Evidencia de `min_recall` y de la tolerancia de no regresión con distintas semillas de partición
+
+Responde a la decisión 3 de la retroalimentación docente (`docs/decision_log.md`): *"Conservar evidencia del comportamiento del criterio `min_recall` ante las semillas 42, 7, 123 y 2031"*.
+
+**Dónde:** computador del MLOps, con el extracto real (condición 2 de la decisión de privacidad) · **Base:** `main` (`9b717bb`)
+
+**Procedimiento:** se cambió solo `split.seed` con `uv run python -m dvc exp run -S split.seed=<semilla> -n semilla-<semilla>`. El modelo (Regresión Logística, C = 1.0), los datos y el resto de `params.yaml` no cambiaron. Sin commit. Al final se restauró con `git restore .` y `dvc checkout`, y `dvc status` dio "Data and pipelines are up to date.". El `@champion` (v1) no cambió; cada corrida quedó como `@challenger` en el registro local.
+
+| Semilla | roc_auc | Diferencia vs. `@champion` (0,8325) | recall_at_eval | precision_at_eval | recall_gap_senior_citizen |
+|---|---:|---:|---:|---:|---:|
+| 42 (baseline, `@champion` v1) | 0,8325 | — | 0,7560 | 0,5268 | 0,116 |
+| 7 | 0,8403 | +0,0078 | 0,7719 | 0,5369 | 0,0279 |
+| 123 | 0,8332 | +0,0007 | 0,7427 | 0,5395 | 0,0214 |
+| 2031 | 0,8007 | −0,0318 | 0,7003 | 0,5087 | 0,0676 |
+
+**Resultados:**
+
+1. **El ruido de la partición es grande:** solo con cambiar la semilla, `roc_auc` varía entre 0,8007 y 0,8403 (rango de 0,0396), lo que confirma lo señalado por el profesor.
+2. **Tolerancia de no regresión:** con `max_drop_vs_champion = 0,01`, la semilla 2031 (caída de 0,0318) se habría rechazado aunque es un re-entrenamiento legítimo. Con 0,035 (PR #45) pasan las 4 semillas, lo que respalda el cambio.
+3. **`min_recall = 0,70`:** las 4 semillas lo cumplen, pero la 2031 queda en 0,7003, solo 0,0003 por encima del límite: el umbral está en el borde de la variación por ruido. No se modifica sin autorización expresa del profesor.
+4. **Equidad:** la brecha de `senior_citizen` también depende de la partición (entre 0,0214 y 0,116); solo la semilla 42 supera el límite de 0,10. Se registra para el seguimiento del riesgo de equidad del Reto 06.
+
 ### Juan Manuel Adarve — Lider
 * aprobación del PR #48
 
 ## Lunes 16 de noviembre
 ### Juan Manuel Adarve — Lider
-* aprobación del PR #46
+* aprobación del PR #46
