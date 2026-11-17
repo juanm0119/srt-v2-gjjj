@@ -620,6 +620,64 @@ Responde a la decisión 3 de la retroalimentación docente (`docs/decision_log.m
 ### Juan Manuel Adarve — Lider
 * aprobación del PR #48
 
+## Martes 17 de noviembre
+### Jorge Eliecer Leighton Romero — MLOps Engineer
+
+#### PS-2 · El gate rechaza un modelo con AUC parecido
+
+**Dónde:** computador del MLOps, con el extracto real y contra el `@champion` local (condiciones 2 a 4 de la decisión de privacidad) · **Base:** `main` (`1405e2a`, con el gate de 0.035)
+
+**Procedimiento:** se corrió el modelo regularizado del escenario 2 como experimento, sin commit: `uv run python -m dvc exp run -S model.logistic_regression.C=0.0005 -n regularizacion-fuerte`. Dio las mismas métricas que obtuvo Jorge Andrés en su rama (`roc_auc` 0,8087 y `recall_at_eval` 0,6897).
+
+```text
+uv run python -m dvc metrics diff main
+Path          Metric                     main      workspace    Change
+metrics.json  customers_contacted        462       252          -210
+metrics.json  f1                         0.6198    0.5183       -0.1015
+metrics.json  net_savings_model          20010.0   13297.5      -6712.5
+metrics.json  net_savings_random         4979.58   2716.13      -2263.45
+metrics.json  net_savings_vs_random      15030.42  10581.37     -4449.05
+metrics.json  pr_auc                     0.6389    0.6106       -0.0283
+metrics.json  precision                  0.5628    0.6468       0.084
+metrics.json  precision_at_eval          0.5268    0.5253       -0.0015
+metrics.json  recall                     0.6897    0.4324       -0.2573
+metrics.json  recall_at_eval             0.756     0.6897       -0.0663
+metrics.json  recall_gap_senior_citizen  0.116     0.0709       -0.0451
+metrics.json  roc_auc                    0.8325    0.8087       -0.0238
+
+uv run python -m scripts.quality_gate; echo "código: $LASTEXITCODE"
+  ✅ roc_auc >= 0.75  (valor: 0.8087)
+  ❌ recall_at_eval >= 0.7 (umbral 0.3)  (valor: 0.6897)
+  ✅ precision_at_eval >= 0.45 (umbral 0.3)  (valor: 0.5253)
+  ✅ roc_auc >= champion v1 (0.8325) - 0.035  (valor: 0.8087)
+[gate] ❌ challenger v5 rechazado
+código: 1
+```
+
+```json
+{
+  "challenger_version": "5",
+  "passed": false,
+  "checks": [
+    {"rule": "roc_auc >= 0.75", "value": 0.8087, "passed": true},
+    {"rule": "recall_at_eval >= 0.7 (umbral 0.3)", "value": 0.6897, "passed": false},
+    {"rule": "precision_at_eval >= 0.45 (umbral 0.3)", "value": 0.5253, "passed": true},
+    {"rule": "roc_auc >= champion v1 (0.8325) - 0.035", "value": 0.8087, "passed": true}
+  ]
+}
+```
+
+- `roc_auc` casi igual (−0,0238): pasa el mínimo de 0,75 y la regla de no regresión con la tolerancia de 0,035.
+- `recall_at_eval` = 0,6897 queda por debajo de `gate.min_recall` = 0,70: es la única regla que falla. El gate detiene un modelo que deja de encontrar desertores aunque su AUC parezca similar.
+- Se restauró con `git restore .` y `dvc checkout`; `dvc status` dio "Data and pipelines are up to date.". El `@champion` (v1) no cambió.
+
+#### PR rechazados por la CI
+
+| Escenario | Enlace al PR | Paso que falló | Tiempo hasta detectar | Decisión |
+|---|---|---|---|---|
+| 1 · contrato relajado (RC-3 de 60 a 100) | [PR #39](https://github.com/juanm0119/srt-v2-gjjj/pull/39) | Pruebas unitarias y de contrato de datos (3 pruebas de RC-3 fallidas) | 29 s (duración de la ejecución #83) | Cerrado sin fusionar |
+| 2 · modelo regularizado (C = 0.0005) | [PR #46](https://github.com/juanm0119/srt-v2-gjjj/pull/46) | Quality gate (`recall_at_eval` bajo `gate.min_recall`) | 44 s (duración de la ejecución #93) | No fusionado |
+
 ## Lunes 16 de noviembre
 ### Juan Manuel Adarve — Lider
 * PR #46 (escenario 2, modelo regularizado): no se fusionó a `main`; la CI lo rechazó en el paso Quality gate, como se esperaba.
