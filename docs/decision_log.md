@@ -127,8 +127,18 @@ La propuesta de privacidad de datos en integración continua (CI), formulada por
 ## Reto 04 · Decisiones derivadas de la retroalimentación docente
 
 **Fecha:** 2026-11-09
-Se agrega bypass para que integraciones con la rama principal exigan un PR y aprobación
+*Decisión:* Proteger main con el ruleset "integracion a main solo con PR". Todo cambio entra por Pull Request con:
+- 1 aprobación de un integrante distinto al autor;
+- los dos checks de la CI en verde: "Pruebas, pipeline y quality gate" e "Imagen Docker y prueba de humo";
+- bloqueo de force push y de borrado de la rama.
 
+La lista de excepciones (bypass list) queda vacía: nadie, ni siquiera el administrador, puede saltarse la regla.
+
+*Administra la regla:* Juan Manuel Adarve (Líder), dueño del repositorio.
+
+*Cambios al quality gate:* los umbrales de la sección gate de params.yaml solo se modifican mediante Pull Request, con decisión del Líder/PO registrada en este log (ver decisiones del 2026-11-14).
+
+*Evidencia:* PS-3 en docs/bitacora/reto-04.md. Un push directo a main fue rechazado por GitHub con GH013: Repository rule violations found for refs/heads/main.
 **Fecha:** 2026-11-14
 
 **Origen:** Respuesta del profesor Christian a la propuesta del equipo GJJJ.

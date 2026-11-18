@@ -681,3 +681,41 @@ código: 1
 ## Lunes 16 de noviembre
 ### Juan Manuel Adarve — Lider
 * PR #46 (escenario 2, modelo regularizado): cerrado sin fusionar; la CI lo rechazó en el paso Quality gate, como se esperaba.
+
+## Martes 17 de noviembre
+### Juan Manuel Adarve — Lider
+* Ruleset correción de parametros y prueba
+```terminaloutput
+git add docs/
+git commit -m "cambio de palabra en la bitacora"
+[main d9b7afd] cambio de palabra en la bitacora
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+```terminaloutput
+git push -f origin main                         
+Username for 'https://github.com': juanm0119
+Password for 'https://juanm0119@github.com': 
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 386 bytes | 386.00 KiB/s, done.
+Total 4 (delta 3), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: Review all repository rules at https://github.com/juanm0119/srt-v2-gjjj/rules?ref=refs%2Fheads%2Fmain
+remote: 
+remote: - Changes must be made through a pull request.
+remote: 
+To https://github.com/juanm0119/srt-v2-gjjj.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/juanm0119/srt-v2-gjjj.git'
+```
+```terminaloutput
+git reset --hard origin/main
+HEAD is now at 6cd48a8 Merge pull request #50 from juanm0119/feature/docs-reto04
+```
+```terminaloutput
+git log --oneline -1
+6cd48a8 (HEAD -> main, origin/main, origin/HEAD) Merge pull request #50 from juanm0119/feature/docs-reto04
+```
